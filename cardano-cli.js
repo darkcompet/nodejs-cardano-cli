@@ -126,6 +126,7 @@ class DkCardanoCli {
     QueryUtxo(walletAddress) {
         return __awaiter(this, void 0, void 0, function* () {
             const result = [];
+            // Command: cardano-cli query utxo --address addr_test1vz2exa3va5pddrw33ldxtsnfpp4p0g92ep9np3fvz37a39saqac6q --testnet-magic 1097911063
             // UTXO result example:
             //                             TxHash                                 TxIx        Amount
             // --------------------------------------------------------------------------------------

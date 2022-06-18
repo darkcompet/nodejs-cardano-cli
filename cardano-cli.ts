@@ -122,6 +122,7 @@ export default class DkCardanoCli {
 	async QueryUtxo(walletAddress: string) : Promise<Array<UtxoResult>> {
 		const result: UtxoResult[] = [];
 
+		// Command: cardano-cli query utxo --address addr_test1vz2exa3va5pddrw33ldxtsnfpp4p0g92ep9np3fvz37a39saqac6q --testnet-magic 1097911063
 		// UTXO result example:
 		//                             TxHash                                 TxIx        Amount
 		// --------------------------------------------------------------------------------------
