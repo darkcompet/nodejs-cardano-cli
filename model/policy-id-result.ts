@@ -1,13 +1,5 @@
 
-export default class PolicyIdResult {
+export default interface PolicyIdResult {
 	nftFilePath: string;
 	policyId: string;
-
-	constructor(
-		nftFilePath: string,
-		policyId: string,
-	) {
-		this.nftFilePath = nftFilePath;
-		this.policyId = policyId;
-	}
 }
