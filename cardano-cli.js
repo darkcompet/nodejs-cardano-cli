@@ -333,7 +333,7 @@ class DkCardanoCli {
         for (let index = 0, N = txOutOptions.length; index < N; ++index) {
             const txOutOption = txOutOptions[index];
             // For ADA asset (lovelace)
-            result += `--tx-out ${txOutOption._address}+${txOutOption._asset2quantity[Const.LOVELACE]}`;
+            result += ` --tx-out ${txOutOption._address}+${txOutOption._asset2quantity[Const.LOVELACE]}`;
             // For non-ADA asset (NFT,...)
             let nonAdaAssetOption = DkConst.EMPTY_STRING;
             for (const asset in txOutOption._asset2quantity) {
@@ -349,7 +349,7 @@ class DkCardanoCli {
                 result += ` --tx-out-datum-hash ${txOutOption._datumHash}`;
             }
         }
-        return result;
+        return result.trimStart();
     }
     BuildMintOptionAsync(mintOptions) {
         return __awaiter(this, void 0, void 0, function* () {

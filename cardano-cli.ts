@@ -320,7 +320,7 @@ export default class DkCardanoCli {
 			const txOutOption = txOutOptions[index];
 
 			// For ADA asset (lovelace)
-			result += `--tx-out ${txOutOption._address}+${txOutOption._asset2quantity[Const.LOVELACE]}`;
+			result += ` --tx-out ${txOutOption._address}+${txOutOption._asset2quantity[Const.LOVELACE]}`;
 
 			// For non-ADA asset (NFT,...)
 			let nonAdaAssetOption = DkConst.EMPTY_STRING;
@@ -339,7 +339,7 @@ export default class DkCardanoCli {
 			}
 		}
 
-		return result;
+		return result.trimStart();
 	}
 
 	private async BuildMintOptionAsync(mintOptions: Array<Model.MintOption>): Promise<string> {
