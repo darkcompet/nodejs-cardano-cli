@@ -228,7 +228,6 @@ class DkCardanoCli {
         });
     }
     /**
-     *
      * @param option
      * @returns Minimum fee in lovelace unit.
      */
@@ -244,12 +243,6 @@ class DkCardanoCli {
 				--protocol-params-file ${option._protocolParametersFilePath}
 		`);
             return parseInt(response.stdout.trim().split(DkConst.SPACE)[0]);
-            // return parseInt(
-            // 	execSync()
-            // 		.toString()
-            // 		.replace(/\s+/g, " ")
-            // 		.split(" ")[0]
-            // );
         });
     }
     /**
@@ -329,11 +322,12 @@ class DkCardanoCli {
      * @returns For eg,. --tx-out addr_test1Alsdkadsk+4800000+"10 mynft1+32 mynft2"
      */
     BuildTxOutOption(txOutOptions) {
+        var _a;
         let result = DkConst.EMPTY_STRING;
         for (let index = 0, N = txOutOptions.length; index < N; ++index) {
             const txOutOption = txOutOptions[index];
             // For ADA asset (lovelace)
-            result += ` --tx-out ${txOutOption._address}+${txOutOption._asset2quantity[Const.LOVELACE]}`;
+            result += ` --tx-out ${txOutOption._address}+${(_a = txOutOption._asset2quantity[Const.LOVELACE]) !== null && _a !== void 0 ? _a : 0}`;
             // For non-ADA asset (NFT,...)
             let nonAdaAssetOption = DkConst.EMPTY_STRING;
             for (const asset in txOutOption._asset2quantity) {
@@ -357,7 +351,7 @@ class DkCardanoCli {
             let result = `--mint="`;
             for (let index = 0, lastIndex = mintOptions.length - 1; index <= lastIndex; ++index) {
                 const option = mintOptions[index];
-                const ok = (option._action == "mint" || option._action == "burn") && (option._assetNameInHex && option._assetQuantity);
+                const ok = (option._action == "mint" || option._action == "burn") && option._assetNameInHex && option._assetQuantity;
                 if (!ok) {
                     throw new Error("Must provide valid: action, asset, quantity");
                 }

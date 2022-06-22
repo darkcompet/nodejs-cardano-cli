@@ -207,7 +207,6 @@ export default class DkCardanoCli {
 	}
 
 	/**
-	 *
 	 * @param option
 	 * @returns Minimum fee in lovelace unit.
 	 */
@@ -223,13 +222,6 @@ export default class DkCardanoCli {
 		`);
 
 		return parseInt(response.stdout.trim().split(DkConst.SPACE)[0]);
-
-		// return parseInt(
-		// 	execSync()
-		// 		.toString()
-		// 		.replace(/\s+/g, " ")
-		// 		.split(" ")[0]
-		// );
 	}
 
 	/**
@@ -320,7 +312,7 @@ export default class DkCardanoCli {
 			const txOutOption = txOutOptions[index];
 
 			// For ADA asset (lovelace)
-			result += ` --tx-out ${txOutOption._address}+${txOutOption._asset2quantity[Const.LOVELACE]}`;
+			result += ` --tx-out ${txOutOption._address}+${txOutOption._asset2quantity[Const.LOVELACE] ?? 0}`;
 
 			// For non-ADA asset (NFT,...)
 			let nonAdaAssetOption = DkConst.EMPTY_STRING;
@@ -348,7 +340,7 @@ export default class DkCardanoCli {
 
 		for (let index = 0, lastIndex = mintOptions.length - 1; index <= lastIndex; ++index) {
 			const option = mintOptions[index];
-			const ok = (option._action == "mint" || option._action == "burn") && (option._assetNameInHex && option._assetQuantity);
+			const ok = (option._action == "mint" || option._action == "burn") && option._assetNameInHex && option._assetQuantity;
 			if (!ok) {
 				throw new Error("Must provide valid: action, asset, quantity");
 			}
