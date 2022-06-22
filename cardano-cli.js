@@ -159,7 +159,7 @@ class DkCardanoCli {
                 const assets = [];
                 const segments = utxo_items.slice(2, utxo_items.length).join(DkConst.SPACE).split('+');
                 for (const segment of segments) {
-                    // Parse non-asset
+                    // Parse datum
                     if (segment.includes("TxOutDatumHash") || segment.includes("TxOutDatumNone")) {
                         if (!segment.includes("None")) {
                             utxo_datumHash = JSON.parse(segment.trim().split(DkConst.SPACE)[2]);
@@ -357,7 +357,7 @@ class DkCardanoCli {
             let result = `--mint="`;
             for (let index = 0, lastIndex = mintOptions.length - 1; index <= lastIndex; ++index) {
                 const option = mintOptions[index];
-                const ok = (option._action == "mint" || option._action == "burn") && (option._assetNameInHex || option._assetQuantity);
+                const ok = (option._action == "mint" || option._action == "burn") && (option._assetNameInHex && option._assetQuantity);
                 if (!ok) {
                     throw new Error("Must provide valid: action, asset, quantity");
                 }

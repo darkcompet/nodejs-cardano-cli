@@ -125,10 +125,10 @@ export interface TxOutOption {
 
 	/**
 	 * Mapping of asset name to its quantity.
-	 * For eg,. [
+	 * For eg,. {
 	 *   "lovelace": 30000000,
 	 *   "mynft1": 20,
-	 * ]
+	 * }
 	 */
 	_asset2quantity: any;
 
