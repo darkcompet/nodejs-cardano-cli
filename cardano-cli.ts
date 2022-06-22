@@ -88,7 +88,7 @@ export default class DkCardanoCli {
 	 */
 	async QueryTipAsync(): Promise<Model.QueryTipJsonResponse> {
 		// By default `query` command uses `--cardano-mode`, but we still declare for more clear.
-		const response = await DkCommands.RunAsync(`${this.cliPath} query tip --${this.network} --cardano-mode`);
+		const response = await DkCommands.RunAsync(`${this.cliPath} query tip ${this.network} --cardano-mode`);
 		return JSON.parse(response.stdout);
 	}
 
@@ -217,7 +217,7 @@ export default class DkCardanoCli {
 				--tx-body-file ${option._txRawBodyFilePath} \
 				--tx-in-count ${option._txInCount} \
 				--tx-out-count ${option._txOutCount} \
-				--${this.network} \
+				${this.network} \
 				--witness-count ${option._witnessCount} \
 				--protocol-params-file ${option._protocolParametersFilePath}
 		`);
@@ -245,7 +245,7 @@ export default class DkCardanoCli {
 		await DkCommands.RunAsync(`
 			${this.cliPath} transaction sign \
 				--tx-body-file ${option._txRawBodyFilePath} \
-				--${this.network} \
+				${this.network} \
 				${signingKeyOption} \
 				--out-file ${option._txSignedBodyOutFilePath}
 		`);
@@ -258,7 +258,7 @@ export default class DkCardanoCli {
 	 * @returns Transaction hash.
 	 */
 	async SubmitTransactionAsync(option: Model.SubmitTransactionOption1): Promise<string> {
-		await DkCommands.RunAsync(`${this.cliPath} transaction submit --${this.network} --tx-file ${option._txSignedBodyFilePath}`);
+		await DkCommands.RunAsync(`${this.cliPath} transaction submit ${this.network} --tx-file ${option._txSignedBodyFilePath}`);
 
 		return this.QueryTransactionIdAsync({ _txFilePath: option._txSignedBodyFilePath });
 	}
