@@ -181,7 +181,7 @@ export interface QueryTransactionIdOption {
 	_txBodyFilePath?: string;
 }
 
-export interface GeneratePolicyKeysResult {
+export interface KeyPairResult {
 	vkeyFilePath: string; // For verification
 	skeyFilePath: string; // For signing
 }

@@ -9,9 +9,9 @@ import * as Const from "./constant";
  * Note: constants are declared outside of class. Maybe leak to caller??
  */
 export default class DkCardanoCli {
-	cliPath: string;
-	network: string;
-	era?: string;
+	cliPath: string; // cardano-cli command path
+	network: string; // mainnet or testnet
+	era?: string; // mary, byron,...
 
 	constructor(option: Model.CardanoCliOption) {
 		this.cliPath = option._cliPath;
@@ -20,30 +20,31 @@ export default class DkCardanoCli {
 	}
 
 	/**
-	 * @param policyVerificationKeyOutFilePath Export to policy.vkey
-	 * @param policySigningKeyOutFilePath Export to policy.skey
-	 * @returns Generated file path of keys.
+	 * Usecase: when create new wallet, or policy of an asset (NFT,...),
+	 * normally we generate new address key pair for verifying, signing transaction later.
+	 *
+	 * @param vkeyOutFilePath Where to export verification key (.vkey)
+	 * @param skeyOutFilePath Where to export signing key (.skey)
+	 *
+	 * @returns File path of generated key pair.
 	 */
-	async GeneratePolicyKeysAsync(policyVerificationKeyOutFilePath: string, policySigningKeyOutFilePath: string): Promise<Model.GeneratePolicyKeysResult> {
-		await DkCommands.RunAsync(`${this.cliPath} address key-gen \
-			--verification-key-file ${policyVerificationKeyOutFilePath} \
-			--signing-key-file ${policySigningKeyOutFilePath};
-		`);
+	async GenerateAddressKeyPairAsync(vkeyOutFilePath: string, skeyOutFilePath: string): Promise<Model.KeyPairResult> {
+		await DkCommands.RunAsync(`${this.cliPath} address key-gen --verification-key-file ${vkeyOutFilePath} --signing-key-file ${skeyOutFilePath};`);
 
 		return {
-			vkeyFilePath: policyVerificationKeyOutFilePath,
-			skeyFilePath: policySigningKeyOutFilePath,
+			vkeyFilePath: vkeyOutFilePath,
+			skeyFilePath: skeyOutFilePath,
 		};
 	}
 
 	/**
-	 * @param policyScriptOutFilePath
-	 * @param policyScriptOutContent
-	 * @returns Generated policy script file path.
+	 * @param outFilePath
+	 * @param outContent
+	 * @returns Generated file path.
 	 */
-	async GeneratePolicyScriptAsync(policyScriptOutFilePath: string, policyScriptOutContent: string): Promise<string> {
-		await fsAsync.writeFile(policyScriptOutFilePath, policyScriptOutContent);
-		return policyScriptOutFilePath;
+	async WriteFileAsync(outFilePath: string, outContent: string): Promise<string> {
+		await fsAsync.writeFile(outFilePath, outContent);
+		return outFilePath;
 	}
 
 	/**

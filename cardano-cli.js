@@ -50,31 +50,32 @@ class DkCardanoCli {
         this.era = (_a = option._era) !== null && _a !== void 0 ? _a : DkConst.EMPTY_STRING;
     }
     /**
-     * @param policyVerificationKeyOutFilePath Export to policy.vkey
-     * @param policySigningKeyOutFilePath Export to policy.skey
-     * @returns Generated file path of keys.
+     * Usecase: when create new wallet, or policy of an asset (NFT,...),
+     * normally we generate new address key pair for verifying, signing transaction later.
+     *
+     * @param vkeyOutFilePath Where to export verification key (.vkey)
+     * @param skeyOutFilePath Where to export signing key (.skey)
+     *
+     * @returns File path of generated key pair.
      */
-    GeneratePolicyKeysAsync(policyVerificationKeyOutFilePath, policySigningKeyOutFilePath) {
+    GenerateAddressKeyPairAsync(vkeyOutFilePath, skeyOutFilePath) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield command_1.default.RunAsync(`${this.cliPath} address key-gen \
-			--verification-key-file ${policyVerificationKeyOutFilePath} \
-			--signing-key-file ${policySigningKeyOutFilePath};
-		`);
+            yield command_1.default.RunAsync(`${this.cliPath} address key-gen --verification-key-file ${vkeyOutFilePath} --signing-key-file ${skeyOutFilePath};`);
             return {
-                vkeyFilePath: policyVerificationKeyOutFilePath,
-                skeyFilePath: policySigningKeyOutFilePath,
+                vkeyFilePath: vkeyOutFilePath,
+                skeyFilePath: skeyOutFilePath,
             };
         });
     }
     /**
-     * @param policyScriptOutFilePath
-     * @param policyScriptOutContent
-     * @returns Generated policy script file path.
+     * @param outFilePath
+     * @param outContent
+     * @returns Generated file path.
      */
-    GeneratePolicyScriptAsync(policyScriptOutFilePath, policyScriptOutContent) {
+    WriteFileAsync(outFilePath, outContent) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield fs_1.promises.writeFile(policyScriptOutFilePath, policyScriptOutContent);
-            return policyScriptOutFilePath;
+            yield fs_1.promises.writeFile(outFilePath, outContent);
+            return outFilePath;
         });
     }
     /**
