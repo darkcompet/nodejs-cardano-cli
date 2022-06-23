@@ -195,8 +195,8 @@ export interface CalculateTransactionMinFeeParams {
 
 export interface SignTransactionParams {
 	_skeyFilePaths: string[];
-	_txRawBodyFilePath: any;
-	_txSignedBodyOutFilePath: any;
+	_txRawBodyFilePath: string;
+	_txSignedBodyOutFilePath: string;
 }
 
 export interface SubmitTransactionParams {
