@@ -1,5 +1,5 @@
 
-export interface CardanoCliOption {
+export interface CardanoCliParams {
 	/**
 	 * Path to cardano-cli command.
 	 */
@@ -18,7 +18,7 @@ export interface CardanoCliOption {
 	_era?: string;
 }
 
-export interface MintOption {
+export interface MintParams {
 	/**
 	 * One of: mint, burn
 	 */
@@ -45,17 +45,17 @@ export interface PolicyScriptJsonContent {
 	keyHash: string;
 }
 
-export interface BuildRawTransactionOption {
-	_txInOptions: TxInOption[];
-	_txOutOptions: TxOutOption[];
+export interface BuildRawTransactionParams {
+	_txInOptions: TxInParams[];
+	_txOutOptions: TxOutParams[];
 	_protocolParametersFilePath: string;
 
-	_txInCollateralOptions?: TxInOption[];
-	_mintOptions?: MintOption[];
-	_withdrawalOptions?: WithdrawalOption[];
-	_certsOption?: CertOption[];
-	_metadataOption?: MetadataOption;
-	_auxScriptOptions?: AuxScriptOption[];
+	_txInCollateralOptions?: TxInParams[];
+	_mintOptions?: MintParams[];
+	_withdrawalOptions?: WithdrawalParams[];
+	_certsOption?: CertParams[];
+	_metadataOption?: MetadataParams;
+	_auxScriptOptions?: AuxScriptParams[];
 
 	/**
 	 * In lovelace unit.
@@ -71,7 +71,7 @@ export interface BuildRawTransactionOption {
 	_invalidBefore?: any;
 }
 
-export interface WithdrawalOption {
+export interface WithdrawalParams {
 	_reward: any;
 	_stakingAddress: any;
 
@@ -82,7 +82,7 @@ export interface WithdrawalOption {
 	_scriptOutContent?: string;
 }
 
-export interface CertOption {
+export interface CertParams {
 	_cert: any;
 
 	_script?: ScriptDetail;
@@ -91,19 +91,19 @@ export interface CertOption {
 	_executionUnits?: Array<number>; // Only 2 elements
 }
 
-export interface MetadataOption {
+export interface MetadataParams {
 	_metadataOutFilePath: string;
 	_metadataOutContent: string;
 }
 
-export interface AuxScriptOption {
+export interface AuxScriptParams {
 	_script: ScriptDetail;
 }
 
-export interface TxInOption {
+export interface TxInParams {
 	_txHash: string;
 	_txIndex: number;
-	_assets: Array<Asset>;
+	_assets: Array<AssetParams>;
 
 	_datum?: string;
 	_datumHash?: string;
@@ -117,7 +117,7 @@ export interface ScriptDetail {
 	_outContent: string;
 }
 
-export interface TxOutOption {
+export interface TxOutParams {
 	/**
 	 * Payment address??
 	 */
@@ -139,11 +139,11 @@ export interface UtxoResult {
 	_txHash: string;
 	_txIndex: number;
 	_datumHash: string;
-	_assets: Asset[];
+	_assets: AssetParams[];
 }
 
 // For both ADA and non-ADA assets
-export interface Asset {
+export interface AssetParams {
 	_name: string;
 	_quantity: number;
 }
@@ -158,7 +158,7 @@ export interface QueryTipJsonResponse {
 	block: number; // 3645785
 }
 
-export interface CalculateTransactionMinFeeOption {
+export interface CalculateTransactionMinFeeParams {
 	_protocolParametersFilePath: string;
 	_txInCount: number;
 	_txOutCount: number;
@@ -166,22 +166,27 @@ export interface CalculateTransactionMinFeeOption {
 	_txRawBodyFilePath: string;
 }
 
-export interface SignTransactionOption {
+export interface SignTransactionParams {
 	_skeyFilePaths: string[];
 	_txRawBodyFilePath: any;
 	_txSignedBodyOutFilePath: any;
 }
 
-export interface SubmitTransactionOption1 {
+export interface SubmitTransactionParams {
 	_txSignedBodyFilePath: string;
 }
 
-export interface QueryTransactionIdOption {
+export interface QueryTransactionIdParams {
 	_txFilePath?: string;
 	_txBodyFilePath?: string;
 }
 
 export interface KeyPairResult {
-	vkeyFilePath: string; // For verification
-	skeyFilePath: string; // For signing
+	_vkeyFilePath: string; // For verification
+	_skeyFilePath: string; // For signing
+}
+
+export interface BuildPaymentAddressResult {
+	_paymentAddress: string;
+	_paymentAddressFilePath: string;
 }

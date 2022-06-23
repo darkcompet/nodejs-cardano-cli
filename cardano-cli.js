@@ -58,12 +58,35 @@ class DkCardanoCli {
      *
      * @returns File path of generated key pair.
      */
-    GenerateAddressKeyPairAsync(vkeyOutFilePath, skeyOutFilePath) {
+    GenerateAddressKeysAsync(vkeyOutFilePath, skeyOutFilePath) {
         return __awaiter(this, void 0, void 0, function* () {
             yield command_1.default.RunAsync(`${this.cliPath} address key-gen --verification-key-file ${vkeyOutFilePath} --signing-key-file ${skeyOutFilePath};`);
             return {
-                vkeyFilePath: vkeyOutFilePath,
-                skeyFilePath: skeyOutFilePath,
+                _vkeyFilePath: vkeyOutFilePath,
+                _skeyFilePath: skeyOutFilePath,
+            };
+        });
+    }
+    /**
+     * Generate a payment address from given verification key.
+     *
+     * @param paymentVkeyFilePath
+     * @param paymentAddressOutFilePath
+     *
+     * @returns Generated payment address and its file path.
+     */
+    BuildPaymentAddressAsync(paymentVkeyFilePath, paymentAddressOutFilePath) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // Generate payment address
+            yield command_1.default.RunAsync(`
+			${this.cliPath} address build \
+				--payment-verification-key-file ${paymentVkeyFilePath} \
+				--out-file ${paymentAddressOutFilePath} ${this.network};
+		`);
+            const paymentAddressBuffer = yield fs_1.promises.readFile(paymentAddressOutFilePath);
+            return {
+                _paymentAddress: paymentAddressBuffer.toString().trim(),
+                _paymentAddressFilePath: paymentAddressOutFilePath
             };
         });
     }

@@ -13,7 +13,7 @@ export default class DkCardanoCli {
 	network: string; // mainnet or testnet
 	era?: string; // mary, byron,...
 
-	constructor(option: Model.CardanoCliOption) {
+	constructor(option: Model.CardanoCliParams) {
 		this.cliPath = option._cliPath;
 		this.network = option._network;
 		this.era = option._era ?? DkConst.EMPTY_STRING;
@@ -28,12 +28,36 @@ export default class DkCardanoCli {
 	 *
 	 * @returns File path of generated key pair.
 	 */
-	async GenerateAddressKeyPairAsync(vkeyOutFilePath: string, skeyOutFilePath: string): Promise<Model.KeyPairResult> {
+	async GenerateAddressKeysAsync(vkeyOutFilePath: string, skeyOutFilePath: string): Promise<Model.KeyPairResult> {
 		await DkCommands.RunAsync(`${this.cliPath} address key-gen --verification-key-file ${vkeyOutFilePath} --signing-key-file ${skeyOutFilePath};`);
 
 		return {
-			vkeyFilePath: vkeyOutFilePath,
-			skeyFilePath: skeyOutFilePath,
+			_vkeyFilePath: vkeyOutFilePath,
+			_skeyFilePath: skeyOutFilePath,
+		};
+	}
+
+	/**
+	 * Generate a payment address from given verification key.
+	 *
+	 * @param paymentVkeyFilePath
+	 * @param paymentAddressOutFilePath
+	 *
+	 * @returns Generated payment address and its file path.
+	 */
+	async BuildPaymentAddressAsync(paymentVkeyFilePath: string, paymentAddressOutFilePath: string) : Promise<Model.BuildPaymentAddressResult> {
+		// Generate payment address
+		await DkCommands.RunAsync(`
+			${this.cliPath} address build \
+				--payment-verification-key-file ${paymentVkeyFilePath} \
+				--out-file ${paymentAddressOutFilePath} ${this.network};
+		`);
+
+		const paymentAddressBuffer = await fsAsync.readFile(paymentAddressOutFilePath);
+
+		return {
+			_paymentAddress: paymentAddressBuffer.toString().trim(),
+			_paymentAddressFilePath: paymentAddressOutFilePath
 		};
 	}
 
@@ -130,7 +154,7 @@ export default class DkCardanoCli {
 
 			// For remain part, we need split plus (+) to parse each component
 			let utxo_datumHash = null;
-			const assets: Model.Asset[] = [];
+			const assets: Model.AssetParams[] = [];
 			const segments = utxo_items.slice(2, utxo_items.length).join(DkConst.SPACE).split('+');
 			for (const segment of segments) {
 				// Parse datum
@@ -165,7 +189,7 @@ export default class DkCardanoCli {
 	 * @param option
 	 * @returns Tx raw body file path.
 	 */
-	async BuildRawTransactionAsync(option: Model.BuildRawTransactionOption): Promise<string> {
+	async BuildRawTransactionAsync(option: Model.BuildRawTransactionParams): Promise<string> {
 		const txInOption = await this.BuildTxInOptionAsync(option._txInOptions);
 		const txOutOption = this.BuildTxOutOption(option._txOutOptions);
 		const txInCollateralOption = option._txInCollateralOptions ? await this.BuildTxInOptionAsync(option._txInCollateralOptions, true) : DkConst.EMPTY_STRING;
@@ -211,7 +235,7 @@ export default class DkCardanoCli {
 	 * @param option
 	 * @returns Minimum fee in lovelace unit.
 	 */
-	async CalculateTransactionMinFeeAsync(option: Model.CalculateTransactionMinFeeOption): Promise<number> {
+	async CalculateTransactionMinFeeAsync(option: Model.CalculateTransactionMinFeeParams): Promise<number> {
 		const response = await DkCommands.RunAsync(`
 			${this.cliPath} transaction calculate-min-fee \
 				--tx-body-file ${option._txRawBodyFilePath} \
@@ -232,7 +256,7 @@ export default class DkCardanoCli {
 	 * @param option
 	 * @returns Tx signed body out-file path.
 	 */
-	async SignTransactionAsync(option: Model.SignTransactionOption): Promise<string> {
+	async SignTransactionAsync(option: Model.SignTransactionParams): Promise<string> {
 		const signingKeyOption = option._skeyFilePaths.map(filePath => `--signing-key-file ${filePath}`).join(DkConst.SPACE);
 
 		await DkCommands.RunAsync(`
@@ -250,13 +274,13 @@ export default class DkCardanoCli {
 	 * In general, caller should sign a transaction before call this.
 	 * @returns Transaction hash.
 	 */
-	async SubmitTransactionAsync(option: Model.SubmitTransactionOption1): Promise<string> {
+	async SubmitTransactionAsync(option: Model.SubmitTransactionParams): Promise<string> {
 		await DkCommands.RunAsync(`${this.cliPath} transaction submit ${this.network} --tx-file ${option._txSignedBodyFilePath}`);
 
 		return this.QueryTransactionIdAsync({ _txFilePath: option._txSignedBodyFilePath });
 	}
 
-	private async QueryTransactionIdAsync(option: Model.QueryTransactionIdOption): Promise<string> {
+	private async QueryTransactionIdAsync(option: Model.QueryTransactionIdParams): Promise<string> {
 		let txOption = DkConst.EMPTY_STRING;
 		if (option._txFilePath) {
 			txOption += `--tx-file ${option._txFilePath}`
@@ -274,7 +298,7 @@ export default class DkCardanoCli {
 		return response.stdout.trim();
 	}
 
-	private async BuildTxInOptionAsync(txInOptions: Model.TxInOption[], isCollateral: boolean = false): Promise<string> {
+	private async BuildTxInOptionAsync(txInOptions: Model.TxInParams[], isCollateral: boolean = false): Promise<string> {
 		let result = DkConst.EMPTY_STRING;
 
 		for (const option of txInOptions) {
@@ -306,7 +330,7 @@ export default class DkCardanoCli {
 	 * @param txOutOptions
 	 * @returns For eg,. --tx-out addr_test1Alsdkadsk+4800000+"10 mynft1+32 mynft2"
 	 */
-	private BuildTxOutOption(txOutOptions: Model.TxOutOption[]): string {
+	private BuildTxOutOption(txOutOptions: Model.TxOutParams[]): string {
 		let result = DkConst.EMPTY_STRING;
 
 		for (let index = 0, N = txOutOptions.length; index < N; ++index) {
@@ -335,7 +359,7 @@ export default class DkCardanoCli {
 		return result.trimStart();
 	}
 
-	private async BuildMintOptionAsync(mintOptions: Array<Model.MintOption>): Promise<string> {
+	private async BuildMintOptionAsync(mintOptions: Array<Model.MintParams>): Promise<string> {
 		// [Build --mint]
 		let result = `--mint="`;
 
@@ -371,7 +395,7 @@ export default class DkCardanoCli {
 		return result;
 	}
 
-	private async BuildWithdrawalOptionAsync(withdrawalOptions: Model.WithdrawalOption[]): Promise<string> {
+	private async BuildWithdrawalOptionAsync(withdrawalOptions: Model.WithdrawalParams[]): Promise<string> {
 		let result = DkConst.EMPTY_STRING;
 
 		for (const option of withdrawalOptions) {
@@ -396,7 +420,7 @@ export default class DkCardanoCli {
 		return result.trim();
 	}
 
-	private async BuildCertOptionAsync(certOptions: Model.CertOption[]): Promise<string> {
+	private async BuildCertOptionAsync(certOptions: Model.CertParams[]): Promise<string> {
 		let result = DkConst.EMPTY_STRING;
 
 		for (const option of certOptions) {
@@ -420,7 +444,7 @@ export default class DkCardanoCli {
 		return result.trim();
 	}
 
-	private async BuildMetadataOptionAsync(option: Model.MetadataOption): Promise<string> {
+	private async BuildMetadataOptionAsync(option: Model.MetadataParams): Promise<string> {
 		await fsAsync.writeFile(option._metadataOutFilePath, option._metadataOutContent);
 
 		const metadataInFilePath = option._metadataOutFilePath;
@@ -428,7 +452,7 @@ export default class DkCardanoCli {
 		return `--metadata-json-file ${metadataInFilePath}`;
 	}
 
-	private async BuildAuxScriptOptionAsync(auxScriptOptions: Model.AuxScriptOption[]) {
+	private async BuildAuxScriptOptionAsync(auxScriptOptions: Model.AuxScriptParams[]) {
 		let result = DkConst.EMPTY_STRING;
 
 		for (const option of auxScriptOptions) {
