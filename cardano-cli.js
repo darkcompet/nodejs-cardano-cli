@@ -255,7 +255,7 @@ class DkCardanoCli {
             // Caller should do it before call us??
             yield this.GenerateProtocolParametersAsync(option._protocolParametersFilePath);
             const scriptInvalidOption = option._scriptInvalid ? "--script-invalid" : DkConst.EMPTY_STRING;
-            // We need 10000/60 = 160 minutes
+            // We need the transaction valid after mor 10000/60 = 160 minutes from now
             const invalidHereAfterValue = option._invalidAfter ? option._invalidAfter : (yield this.QueryTipAsync()).slot + 10000;
             const invalidBeforeValue = option._invalidBefore ? option._invalidBefore : 0;
             const feeValue = option._fee ? option._fee : 0;

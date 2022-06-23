@@ -50,6 +50,11 @@ export interface BuildRawTransactionParams {
 	_txOutOptions: TxOutParams[];
 	_protocolParametersFilePath: string;
 
+	/**
+	 * To store out-file when building a raw transaction.
+	 */
+	_txRawBodyOutFilePath: string;
+
 	_txInCollateralOptions?: TxInParams[];
 	_mintOptions?: MintParams[];
 	_withdrawalOptions?: WithdrawalParams[];
@@ -62,13 +67,9 @@ export interface BuildRawTransactionParams {
 	 */
 	_fee?: number;
 
-	/**
-	 * To store out-file when building a raw transaction.
-	 */
-	_txRawBodyOutFilePath: string;
-	_scriptInvalid?: any;
-	_invalidAfter?: any;
-	_invalidBefore?: any;
+	_scriptInvalid?: boolean;
+	_invalidBefore?: number;
+	_invalidAfter?: number;
 }
 
 export interface WithdrawalParams {
