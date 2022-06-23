@@ -119,7 +119,7 @@ export interface ScriptDetail {
 
 export interface TxOutParams {
 	/**
-	 * Payment address??
+	 * Payment address.
 	 */
 	_address: string;
 
@@ -142,6 +142,17 @@ export interface UtxoResult {
 	_assets: AssetParams[];
 }
 
+export interface WalletInfoResult {
+	/**
+	 * For eg,. {
+	 *   "lovelace": 1400000,
+	 *   "mynft1": 2,
+	 * }
+	 */
+	_balance: any;
+	_utxos: UtxoResult[];
+}
+
 // For both ADA and non-ADA assets
 export interface AssetParams {
 	_name: string;
@@ -160,9 +171,25 @@ export interface QueryTipJsonResponse {
 
 export interface CalculateTransactionMinFeeParams {
 	_protocolParametersFilePath: string;
+
+	/**
+	 * Number of inputs be used in the transaction.
+	 */
 	_txInCount: number;
+
+	/**
+	 * Number of outputs be used in the transaction.
+	 */
 	_txOutCount: number;
+
+	/**
+	 * Number of Shelley key signings (witnesses) be used in the transaction.
+	 */
 	_witnessCount: number;
+
+	/**
+	 * Use this for calculate bytes of the transaction.
+	 */
 	_txRawBodyFilePath: string;
 }
 

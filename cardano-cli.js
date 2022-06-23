@@ -68,7 +68,7 @@ class DkCardanoCli {
         });
     }
     /**
-     * Generate a payment address from given verification key.
+     * Build Shelley payment address from given verification key.
      *
      * @param paymentVkeyFilePath
      * @param paymentAddressOutFilePath
@@ -205,6 +205,36 @@ class DkCardanoCli {
                 });
             }
             return utxos;
+        });
+    }
+    /**
+     * This uses `QueryUtxoAsync()` to customize some extra info.
+     * Note: for convenience, returned balance always contain `lovelace` asset.
+     *
+     * @param walletAddress
+     * @returns Balance and Utxos.
+     */
+    QueryWalletInfoAsync(walletAddress) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const utxos = yield this.QueryUtxoAsync(walletAddress);
+            // Calculate balance (total quantity on each asset).
+            // For convenience, we always set lovelace even if utxos is empty.
+            const balance = {
+                "lovelace": 0,
+            };
+            for (const utxo of utxos) {
+                for (const asset of utxo._assets) {
+                    const assetName = asset._name;
+                    if (!balance[assetName]) {
+                        balance[assetName] = 0;
+                    }
+                    balance[assetName] += asset._quantity;
+                }
+            }
+            return {
+                _balance: balance,
+                _utxos: utxos,
+            };
         });
     }
     /**
@@ -372,6 +402,8 @@ class DkCardanoCli {
     BuildMintOptionAsync(mintOptions) {
         return __awaiter(this, void 0, void 0, function* () {
             // [Build --mint]
+            // For burn, just add - before asset quantity.
+            // For eg,. --mint="1 policyidA.mynftA+5 policyidB.mynftB+-2 policyidC.mynftC"
             let result = `--mint="`;
             for (let index = 0, lastIndex = mintOptions.length - 1; index <= lastIndex; ++index) {
                 const option = mintOptions[index];
