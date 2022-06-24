@@ -1,0 +1,36 @@
+{
+	"name": "darkcompet-nodejs-cardano-cli",
+	"version": "1.0.0",
+	"description": "This is cardano-cli wrapper for nodejs",
+	"author": "DarkCompet <darkcompet@gmail.com>",
+	"license": "ISC",
+	"keywords": [
+		"javascript",
+		"typescripte",
+		"nodejs",
+		"cardano",
+		"cardano-cli"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"build": "rm -rf dist/ && tsc",
+		"prepare": "npm run build"
+	},
+	"devDependencies": {
+		"@types/node": "^18.0.0",
+		"ts-node": "^10.8.1",
+		"typescript": "^4.7.4"
+	},
+	"dependencies": {
+		"@darkcompet/js-core": "^1.0.0",
+		"@darkcompet/nodejs-core": "^1.0.0"
+	}
+}

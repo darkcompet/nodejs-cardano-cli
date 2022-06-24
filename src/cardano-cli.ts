@@ -1,8 +1,8 @@
-import DkCommands from "../nodejs-core/command";
 import { promises as fsAsync } from 'fs';
+import { DkConst } from "@darkcompet/js-core";
+import { DkCommands } from "@darkcompet/nodejs-core";
 
 import * as Model from "./model";
-import * as DkConst from "../js-core/constant";
 import * as Const from "./constant";
 
 /**
