@@ -8,7 +8,7 @@ import * as Const from "./constant";
 /**
  * Note: constants are declared outside of class. Maybe leak to caller??
  */
-export default class DkCardanoCli {
+export class DkCardanoCli {
 	cliPath: string; // cardano-cli command path
 	network: string; // mainnet or testnet
 	era?: string; // mary, byron,...
