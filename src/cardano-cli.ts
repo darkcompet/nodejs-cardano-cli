@@ -369,7 +369,10 @@ export class DkCardanoCli {
 			const txOutOption = txOutOptions[index];
 
 			// For ADA asset (lovelace)
-			result += ` --tx-out ${txOutOption._address}+${txOutOption._asset2quantity[Const.LOVELACE] ?? 0}`;
+			if (!txOutOption._asset2quantity[Const.LOVELACE]) {
+				throw new Error("Must send some lovelaces");
+			}
+			result += ` --tx-out ${txOutOption._address}+${txOutOption._asset2quantity[Const.LOVELACE]}`;
 
 			// For non-ADA asset (NFT,...)
 			let nonAdaAssetOption = DkConst.EMPTY_STRING;
