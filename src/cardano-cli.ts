@@ -205,12 +205,11 @@ export class DkCardanoCli {
 		};
 
 		for (const utxo of utxos) {
-			for (const asset of utxo._asset2quantity) {
-				const assetName = asset._name;
-				if (!balance[assetName]) {
-					balance[assetName] = 0;
+			for (const asset in utxo._asset2quantity) {
+				if (!balance[asset]) {
+					balance[asset] = 0;
 				}
-				balance[assetName] += asset._quantity;
+				balance[asset] += utxo._asset2quantity[asset];
 			}
 		}
 
