@@ -190,7 +190,10 @@ export class DkCardanoCli {
 
 	/**
 	 * This uses `QueryUtxoAsync()` to customize some extra info.
-	 * Note: for convenience, returned balance always contain `lovelace` asset.
+	 * Note: balance is sum up of asset2quantity at same key, for eg,.
+	 * - balance: { "lovelace": 120, "mynft1": 3 }
+	 * - asset2quantity_1: { "lovelace": 90 , "mynft1": 2 }
+	 * - asset2quantity_2: { "lovelace": 30, "mynft1": 1 }
 	 *
 	 * @param walletAddress
 	 * @returns Balance and Utxos.
@@ -199,10 +202,7 @@ export class DkCardanoCli {
 		const utxos = await this.QueryUtxoAsync(walletAddress);
 
 		// Calculate balance (total quantity on each asset).
-		// For convenience, we always set lovelace even if utxos is empty.
-		const balance: any = {
-			"lovelace": 0,
-		};
+		const balance: any = {};
 
 		for (const utxo of utxos) {
 			for (const asset in utxo._asset2quantity) {
