@@ -154,8 +154,9 @@ export class DkCardanoCli {
 
 			// For remain part, we need split plus (+) to parse each component
 			let utxo_datumHash = null;
-			const assets: Model.AssetParams[] = [];
+			const asset2quantity: any = {};
 			const segments = utxo_items.slice(2, utxo_items.length).join(DkConst.SPACE).split('+');
+
 			for (const segment of segments) {
 				// Parse datum
 				if (segment.includes("TxOutDatumHash") || segment.includes("TxOutDatumNone")) {
@@ -166,18 +167,21 @@ export class DkCardanoCli {
 				}
 
 				// Parse asset
-				const quantity2asset = segment.trim().split(DkConst.SPACE);
-				assets.push({
-					_name: quantity2asset[1],
-					_quantity: parseInt(quantity2asset[0])
-				});
+				let [quantity, name] = segment.trim().split(DkConst.SPACE);
+				quantity = parseInt(quantity);
+
+				// It is should not happen, but for safe, we should sum up.
+				if (!asset2quantity[name]) {
+					asset2quantity[name] = 0;
+				}
+				asset2quantity[name] += quantity;
 			}
 
 			utxos.push({
 				_txHash: utxo_txHash,
 				_txIndex: utxo_txIndex,
 				_datumHash: utxo_datumHash,
-				_assets: assets
+				_asset2quantity: asset2quantity
 			});
 		}
 
@@ -201,7 +205,7 @@ export class DkCardanoCli {
 		};
 
 		for (const utxo of utxos) {
-			for (const asset of utxo._assets) {
+			for (const asset of utxo._asset2quantity) {
 				const assetName = asset._name;
 				if (!balance[assetName]) {
 					balance[assetName] = 0;

@@ -104,13 +104,20 @@ export interface AuxScriptParams {
 export interface TxInParams {
 	_txHash: string;
 	_txIndex: number;
-	_assets: Array<AssetParams>;
+
+	/**
+	 * For eg,. {
+	 *   "lovelace": 1000000,
+	 *   "mynft1": 3
+	 * }
+	 */
+	_asset2quantity: any;
 
 	_datum?: string;
 	_datumHash?: string;
 	_script?: ScriptDetail;
 	_redeemer?: string;
-	_executionUnits?: Array<number>; // Only 2 elements
+	_executionUnits?: number[]; // Only 2 elements
 }
 
 export interface ScriptDetail {
@@ -140,7 +147,15 @@ export interface UtxoResult {
 	_txHash: string;
 	_txIndex: number;
 	_datumHash: string;
-	_assets: AssetParams[];
+
+	/**
+	 * Mapping for both ADA and non-ADA assets.
+	 * For eg,. {
+	 *   "lovelace": 1000000,
+	 *   "mynft1": 3
+	 * }
+	 */
+	_asset2quantity: any;
 }
 
 export interface WalletInfoResult {
@@ -152,12 +167,6 @@ export interface WalletInfoResult {
 	 */
 	_balance: any;
 	_utxos: UtxoResult[];
-}
-
-// For both ADA and non-ADA assets
-export interface AssetParams {
-	_name: string;
-	_quantity: number;
 }
 
 // Do NOT change property names since they are fixed.
