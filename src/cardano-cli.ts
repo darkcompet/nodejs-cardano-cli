@@ -13,7 +13,7 @@ export class DkCardanoCli {
 	network: string; // mainnet or testnet
 	era?: string; // mary, byron,...
 
-	constructor(option: Model.CardanoCliParams) {
+	constructor(option: Model.ConstructOption) {
 		this.cliPath = option._cliPath;
 		this.network = option._network;
 		this.era = option._era ?? DkConst.EMPTY_STRING;
@@ -28,7 +28,7 @@ export class DkCardanoCli {
 	 *
 	 * @returns File path of generated key pair.
 	 */
-	async GenerateAddressKeysAsync(vkeyOutFilePath: string, skeyOutFilePath: string): Promise<Model.KeyPairResult> {
+	async GenerateAddressKeysAsync(vkeyOutFilePath: string, skeyOutFilePath: string): Promise<Model.KeyPair> {
 		await DkCommands.RunAsync(`${this.cliPath} address key-gen --verification-key-file ${vkeyOutFilePath} --signing-key-file ${skeyOutFilePath};`);
 
 		return {
@@ -45,7 +45,7 @@ export class DkCardanoCli {
 	 *
 	 * @returns Generated payment address and its file path.
 	 */
-	async BuildPaymentAddressAsync(paymentVkeyFilePath: string, paymentAddressOutFilePath: string): Promise<Model.BuildPaymentAddressResult> {
+	async BuildPaymentAddressAsync(paymentVkeyFilePath: string, paymentAddressOutFilePath: string): Promise<Model.PaymentAddress> {
 		// Generate payment address
 		await DkCommands.RunAsync(`
 			${this.cliPath} address build \
@@ -121,8 +121,8 @@ export class DkCardanoCli {
 	 * @param walletAddress For eg,. addr_test1vz2exa3va5pddrw33ldxtsnfpp4p0g92ep9np3fvz37a39saqac6q
 	 * @returns
 	 */
-	async QueryUtxoAsync(walletAddress: string): Promise<Model.UtxoResult[]> {
-		const utxos: Model.UtxoResult[] = [];
+	async QueryUtxoAsync(walletAddress: string): Promise<Model.Utxo[]> {
+		const utxos: Model.Utxo[] = [];
 
 		// Command: cardano-cli query utxo --address addr_test1vz2exa3va5pddrw33ldxtsnfpp4p0g92ep9np3fvz37a39saqac6q --testnet-magic 1097911063
 		// UTXO result example:
@@ -198,7 +198,7 @@ export class DkCardanoCli {
 	 * @param walletAddress
 	 * @returns Balance and Utxos.
 	 */
-	async QueryWalletInfoAsync(walletAddress: string): Promise<Model.WalletInfoResult> {
+	async QueryWalletInfoAsync(walletAddress: string): Promise<Model.WalletInfo> {
 		const utxos = await this.QueryUtxoAsync(walletAddress);
 
 		// Calculate balance (total quantity on each asset).
@@ -224,9 +224,9 @@ export class DkCardanoCli {
 	 * @param option
 	 * @returns Tx raw body file path.
 	 */
-	async BuildRawTransactionAsync(option: Model.BuildRawTransactionParams): Promise<string> {
-		const txInOption = await this.BuildTxInOptionAsync(option._txInOptions);
-		const txOutOption = this.BuildTxOutOption(option._txOutOptions);
+	async BuildRawTransactionAsync(option: Model.BuildRawTransactionOption): Promise<string> {
+		const txInOption = await this.BuildTxInOptionAsync(option._txIns);
+		const txOutOption = this.BuildTxOutOption(option._txOuts);
 		const txInCollateralOption = option._txInCollateralOptions ? await this.BuildTxInOptionAsync(option._txInCollateralOptions, true) : DkConst.EMPTY_STRING;
 		const mintOption = option._mintOptions ? await this.BuildMintOptionAsync(option._mintOptions) : DkConst.EMPTY_STRING;
 		const withdrawalOption = option._withdrawalOptions ? await this.BuildWithdrawalOptionAsync(option._withdrawalOptions) : DkConst.EMPTY_STRING;
@@ -270,7 +270,7 @@ export class DkCardanoCli {
 	 * @param option
 	 * @returns Minimum fee in lovelace unit.
 	 */
-	async CalculateTransactionMinFeeAsync(option: Model.CalculateTransactionMinFeeParams): Promise<number> {
+	async CalculateTransactionMinFeeAsync(option: Model.CalculateTransactionMinFeeOption): Promise<number> {
 		const response = await DkCommands.RunAsync(`
 			${this.cliPath} transaction calculate-min-fee \
 				--tx-body-file ${option._txRawBodyFilePath} \
@@ -291,7 +291,7 @@ export class DkCardanoCli {
 	 * @param option
 	 * @returns Tx signed body out-file path.
 	 */
-	async SignTransactionAsync(option: Model.SignTransactionParams): Promise<string> {
+	async SignTransactionAsync(option: Model.SignTransactionOption): Promise<string> {
 		const signingKeyOption = option._skeyFilePaths.map(filePath => `--signing-key-file ${filePath}`).join(DkConst.SPACE);
 
 		await DkCommands.RunAsync(`
@@ -309,13 +309,13 @@ export class DkCardanoCli {
 	 * In general, caller should sign a transaction before call this.
 	 * @returns Transaction hash.
 	 */
-	async SubmitTransactionAsync(option: Model.SubmitTransactionParams): Promise<string> {
+	async SubmitTransactionAsync(option: Model.SubmitTransactionOption): Promise<string> {
 		await DkCommands.RunAsync(`${this.cliPath} transaction submit ${this.network} --tx-file ${option._txSignedBodyFilePath}`);
 
 		return this.QueryTransactionIdAsync({ _txFilePath: option._txSignedBodyFilePath });
 	}
 
-	private async QueryTransactionIdAsync(option: Model.QueryTransactionIdParams): Promise<string> {
+	private async QueryTransactionIdAsync(option: Model.QueryTransactionIdOption): Promise<string> {
 		let txOption = DkConst.EMPTY_STRING;
 		if (option._txFilePath) {
 			txOption += `--tx-file ${option._txFilePath}`
@@ -333,10 +333,10 @@ export class DkCardanoCli {
 		return response.stdout.trim();
 	}
 
-	private async BuildTxInOptionAsync(txInOptions: Model.TxInParams[], isCollateral: boolean = false): Promise<string> {
+	private async BuildTxInOptionAsync(txIns: Model.TxIn[], isCollateral: boolean = false): Promise<string> {
 		let result = DkConst.EMPTY_STRING;
 
-		for (const option of txInOptions) {
+		for (const option of txIns) {
 			result += ` --tx-in${isCollateral ? "-collateral" : ""} ${option._txHash}#${option._txIndex}`;
 
 			if (option._script) {
@@ -362,14 +362,14 @@ export class DkCardanoCli {
 	}
 
 	/**
-	 * @param txOutOptions
+	 * @param txOuts
 	 * @returns For eg,. --tx-out addr_test1Alsdkadsk+4800000+"10 mynft1+32 mynft2"
 	 */
-	private BuildTxOutOption(txOutOptions: Model.TxOutParams[]): string {
+	private BuildTxOutOption(txOuts: Model.TxOut[]): string {
 		let result = DkConst.EMPTY_STRING;
 
-		for (let index = 0, N = txOutOptions.length; index < N; ++index) {
-			const txOutOption = txOutOptions[index];
+		for (let index = 0, N = txOuts.length; index < N; ++index) {
+			const txOutOption = txOuts[index];
 
 			// For ADA asset (lovelace)
 			if (!txOutOption._asset2quantity[Const.LOVELACE]) {
@@ -397,14 +397,14 @@ export class DkCardanoCli {
 		return result.trimStart();
 	}
 
-	private async BuildMintOptionAsync(mintOptions: Array<Model.MintParams>): Promise<string> {
+	private async BuildMintOptionAsync(options: Array<Model.MintInfo>): Promise<string> {
 		// [Build --mint]
 		// For burn, just add - before asset quantity.
 		// For eg,. --mint="1 policyidA.mynftA+5 policyidB.mynftB+-2 policyidC.mynftC"
 		let result = `--mint="`;
 
-		for (let index = 0, lastIndex = mintOptions.length - 1; index <= lastIndex; ++index) {
-			const option = mintOptions[index];
+		for (let index = 0, lastIndex = options.length - 1; index <= lastIndex; ++index) {
+			const option = options[index];
 			const ok = (option._action == "mint" || option._action == "burn") && option._assetNameInHex && option._assetQuantity;
 			if (!ok) {
 				throw new Error("Must provide valid: action, asset, quantity");
@@ -419,8 +419,8 @@ export class DkCardanoCli {
 		result = result.trimEnd() + `"`;
 
 		// [Build --mint-script-file]
-		for (let index = 0, N = mintOptions.length; index < N; ++index) {
-			const option = mintOptions[index];
+		for (let index = 0, N = options.length; index < N; ++index) {
+			const option = options[index];
 
 			result += ` --mint-script-file ${option._policyScriptFilePath}`;
 
@@ -435,10 +435,10 @@ export class DkCardanoCli {
 		return result;
 	}
 
-	private async BuildWithdrawalOptionAsync(withdrawalOptions: Model.WithdrawalParams[]): Promise<string> {
+	private async BuildWithdrawalOptionAsync(options: Model.WithdrawalOption[]): Promise<string> {
 		let result = DkConst.EMPTY_STRING;
 
-		for (const option of withdrawalOptions) {
+		for (const option of options) {
 			result += ` --withdrawal ${option._stakingAddress}+${option._reward}`;
 
 			if (option._scriptOutContent) {
@@ -460,10 +460,10 @@ export class DkCardanoCli {
 		return result.trim();
 	}
 
-	private async BuildCertOptionAsync(certOptions: Model.CertParams[]): Promise<string> {
+	private async BuildCertOptionAsync(options: Model.CertOption[]): Promise<string> {
 		let result = DkConst.EMPTY_STRING;
 
-		for (const option of certOptions) {
+		for (const option of options) {
 			result += ` --certificate ${option._cert}`;
 
 			if (option._script) {
@@ -484,7 +484,7 @@ export class DkCardanoCli {
 		return result.trim();
 	}
 
-	private async BuildMetadataOptionAsync(option: Model.MetadataParams): Promise<string> {
+	private async BuildMetadataOptionAsync(option: Model.MetadataOption): Promise<string> {
 		await fsAsync.writeFile(option._metadataOutFilePath, option._metadataOutContent);
 
 		const metadataInFilePath = option._metadataOutFilePath;
@@ -492,10 +492,10 @@ export class DkCardanoCli {
 		return `--metadata-json-file ${metadataInFilePath}`;
 	}
 
-	private async BuildAuxScriptOptionAsync(auxScriptOptions: Model.AuxScriptParams[]) {
+	private async BuildAuxScriptOptionAsync(options: Model.AuxScriptOption[]) {
 		let result = DkConst.EMPTY_STRING;
 
-		for (const option of auxScriptOptions) {
+		for (const option of options) {
 			await fsAsync.writeFile(option._script._outFilePath, option._script._outContent);
 			result += ` --auxiliary-script-file ${option._script._outFilePath}`;
 		}
