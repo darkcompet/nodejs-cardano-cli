@@ -233,13 +233,9 @@ export class DkCardanoCli {
 		const certsOption = option._certsOption ? await this.BuildCertOptionAsync(option._certsOption) : DkConst.EMPTY_STRING;
 		const metadataOption = option._metadataOption ? await this.BuildMetadataOptionAsync(option._metadataOption) : DkConst.EMPTY_STRING;
 		const auxScriptOpion = option._auxScriptOptions ? await this.BuildAuxScriptOptionAsync(option._auxScriptOptions) : DkConst.EMPTY_STRING;
+		const scriptInvalidOption = option._scriptInvalid ? "--script-invalid" : DkConst.EMPTY_STRING;
 		const invalidBeforeOption = option._invalidBefore ? `--invalid-before ${option._invalidBefore}` : DkConst.EMPTY_STRING;
 		const invalidHereAfterOption = option._invalidAfter ? `--invalid-hereafter ${option._invalidAfter}` : DkConst.EMPTY_STRING;
-
-		const scriptInvalidOption = option._scriptInvalid ? "--script-invalid" : DkConst.EMPTY_STRING;
-		// We need the transaction valid after mor 10000/60 = 160 minutes from now
-		// const invalidHereAfterValue = option._invalidAfter ? option._invalidAfter : (await this.QueryTipAsync()).slot + 10000;
-		// const invalidBeforeValue = option._invalidBefore ? `--invalid-hereafter ${option._invalidBefore}` : 0;
 
 		await DkCommands.RunAsync(`
 			${this.cliPath} transaction build-raw \
