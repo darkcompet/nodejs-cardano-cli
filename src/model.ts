@@ -9,13 +9,6 @@ export interface ConstructOption {
 	 * For eg,. --mainnet, --testnet-magic 1097911063
 	 */
 	_network: string;
-
-	/**
-	 * One of below: --byron-era, --shelley-era, --allegra-era, --mary-era, --alonzo-era.
-	 *
-	 * See more: cardano-cli transaction build-raw
-	 */
-	_era?: string;
 }
 
 export interface TxIn {
@@ -129,6 +122,11 @@ export interface BuildRawTransactionOption {
 	 */
 	_txRawBodyOutFilePath: string;
 
+	/**
+	 * In lovelace unit.
+	 */
+	_fee: number;
+
 	_txInCollateralOptions?: TxIn[];
 	_mintOptions?: MintInfo[];
 	_withdrawalOptions?: WithdrawalOption[];
@@ -136,14 +134,11 @@ export interface BuildRawTransactionOption {
 	_metadataOption?: MetadataOption;
 	_auxScriptOptions?: AuxScriptOption[];
 
-	/**
-	 * In lovelace unit.
-	 */
-	_fee?: number;
-
 	_scriptInvalid?: boolean;
 	_invalidBefore?: number;
 	_invalidAfter?: number;
+
+	_era?: string;
 }
 
 export interface WithdrawalOption {

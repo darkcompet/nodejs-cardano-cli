@@ -11,12 +11,10 @@ import * as Const from "./constant";
 export class DkCardanoCli {
 	cliPath: string; // cardano-cli command path
 	network: string; // mainnet or testnet
-	era?: string; // mary, byron,...
 
 	constructor(option: Model.ConstructOption) {
 		this.cliPath = option._cliPath;
 		this.network = option._network;
-		this.era = option._era ?? DkConst.EMPTY_STRING;
 	}
 
 	/**
@@ -48,9 +46,9 @@ export class DkCardanoCli {
 	async BuildPaymentAddressAsync(paymentVkeyFilePath: string, paymentAddressOutFilePath: string): Promise<Model.PaymentAddress> {
 		// Generate payment address
 		await DkCommands.RunAsync(`
-			${this.cliPath} address build \
+			${this.cliPath} address build ${this.network} \
 				--payment-verification-key-file ${paymentVkeyFilePath} \
-				--out-file ${paymentAddressOutFilePath} ${this.network};
+				--out-file ${paymentAddressOutFilePath};
 		`);
 
 		const paymentAddressBuffer = await fsAsync.readFile(paymentAddressOutFilePath);
@@ -136,7 +134,7 @@ export class DkCardanoCli {
 
 		// By default `query` command uses `--cardano-mode`, but we still declare for more clear.
 		const utxo_result = await DkCommands.RunAsync(`
-			${this.cliPath} query utxo --address ${walletAddress} ${this.network} --cardano-mode;
+			${this.cliPath} query utxo ${this.network} --address ${walletAddress} --cardano-mode;
 		`);
 
 		const utxo_raw = utxo_result.stdout;
@@ -226,6 +224,7 @@ export class DkCardanoCli {
 	 * @returns Tx raw body file path.
 	 */
 	async BuildRawTransactionAsync(option: Model.BuildRawTransactionOption): Promise<string> {
+		const eraOption = option._era ? option._era : DkConst.EMPTY_STRING; // "--alonzo-era";
 		const txInOption = await this.BuildTxInOptionAsync(option._txIns);
 		const txOutOption = this.BuildTxOutOption(option._txOuts);
 		const txInCollateralOption = option._txInCollateralOptions ? await this.BuildTxInOptionAsync(option._txInCollateralOptions, true) : DkConst.EMPTY_STRING;
@@ -234,19 +233,16 @@ export class DkCardanoCli {
 		const certsOption = option._certsOption ? await this.BuildCertOptionAsync(option._certsOption) : DkConst.EMPTY_STRING;
 		const metadataOption = option._metadataOption ? await this.BuildMetadataOptionAsync(option._metadataOption) : DkConst.EMPTY_STRING;
 		const auxScriptOpion = option._auxScriptOptions ? await this.BuildAuxScriptOptionAsync(option._auxScriptOptions) : DkConst.EMPTY_STRING;
-
-		// Caller should do it before call us??
-		await this.GenerateProtocolParametersAsync(option._protocolParametersFilePath);
+		const invalidBeforeOption = option._invalidBefore ? `--invalid-before ${option._invalidBefore}` : DkConst.EMPTY_STRING;
+		const invalidHereAfterOption = option._invalidAfter ? `--invalid-hereafter ${option._invalidAfter}` : DkConst.EMPTY_STRING;
 
 		const scriptInvalidOption = option._scriptInvalid ? "--script-invalid" : DkConst.EMPTY_STRING;
 		// We need the transaction valid after mor 10000/60 = 160 minutes from now
-		const invalidHereAfterValue = option._invalidAfter ? option._invalidAfter : (await this.QueryTipAsync()).slot + 10000;
-		const invalidBeforeValue = option._invalidBefore ? option._invalidBefore : 0;
-		const feeValue = option._fee ? option._fee : 0;
+		// const invalidHereAfterValue = option._invalidAfter ? option._invalidAfter : (await this.QueryTipAsync()).slot + 10000;
+		// const invalidBeforeValue = option._invalidBefore ? `--invalid-hereafter ${option._invalidBefore}` : 0;
 
 		await DkCommands.RunAsync(`
 			${this.cliPath} transaction build-raw \
-				--alonzo-era \
 				${txInOption} \
 				${txOutOption} \
 				${txInCollateralOption} \
@@ -256,12 +252,12 @@ export class DkCardanoCli {
 				${auxScriptOpion} \
 				${metadataOption} \
 				${scriptInvalidOption} \
-				--invalid-hereafter ${invalidHereAfterValue} \
-				--invalid-before ${invalidBeforeValue} \
-				--fee ${feeValue} \
+				${invalidBeforeOption} \
+				${invalidHereAfterOption} \
+				--fee ${option._fee} \
 				--out-file ${option._txRawBodyOutFilePath} \
 				--protocol-params-file ${option._protocolParametersFilePath} \
-				${this.era}
+				${eraOption}
 		`);
 
 		return option._txRawBodyOutFilePath;
@@ -273,11 +269,10 @@ export class DkCardanoCli {
 	 */
 	async CalculateTransactionMinFeeAsync(option: Model.CalculateTransactionMinFeeOption): Promise<number> {
 		const response = await DkCommands.RunAsync(`
-			${this.cliPath} transaction calculate-min-fee \
+			${this.cliPath} transaction calculate-min-fee ${this.network} \
 				--tx-body-file ${option._txRawBodyFilePath} \
 				--tx-in-count ${option._txInCount} \
 				--tx-out-count ${option._txOutCount} \
-				${this.network} \
 				--witness-count ${option._witnessCount} \
 				--protocol-params-file ${option._protocolParametersFilePath}
 		`);
@@ -296,9 +291,8 @@ export class DkCardanoCli {
 		const signingKeyOption = option._skeyFilePaths.map(filePath => `--signing-key-file ${filePath}`).join(DkConst.SPACE);
 
 		await DkCommands.RunAsync(`
-			${this.cliPath} transaction sign \
+			${this.cliPath} transaction sign ${this.network} \
 				--tx-body-file ${option._txRawBodyFilePath} \
-				${this.network} \
 				${signingKeyOption} \
 				--out-file ${option._txSignedBodyOutFilePath}
 		`);
