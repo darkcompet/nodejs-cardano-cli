@@ -72,10 +72,11 @@ export class DkCardanoCli {
 	}
 
 	/**
+	 * Calculate key hash from given payment vkey file.
 	 * @param paymentVerificationKeyFilePath
 	 * @returns Key hash of given address.
 	 */
-	async CalculateHashOfAddress(paymentVerificationKeyFilePath: string): Promise<string> {
+	async CalculateKeyHashOfPaymentAddress(paymentVerificationKeyFilePath: string): Promise<string> {
 		const response = await DkCommands.RunAsync(`${this.cliPath} address key-hash --payment-verification-key-file ${paymentVerificationKeyFilePath}`);
 
 		return response.stdout.trim();
