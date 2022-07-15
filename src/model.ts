@@ -94,7 +94,11 @@ export interface MintInfo {
 	 * One of: mint, burn
 	 */
 	_action: string;
-	_assetNameInHex: string;
+
+	/**
+	 * Normally it is "policy_id.asset_name_in_hex"
+	 */
+	_assetId: string;
 	_assetQuantity: number;
 	_policyScriptFilePath: string;
 

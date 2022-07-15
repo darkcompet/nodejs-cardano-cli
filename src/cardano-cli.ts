@@ -396,7 +396,7 @@ export class DkCardanoCli {
 
 		for (let index = 0, lastIndex = options.length - 1; index <= lastIndex; ++index) {
 			const option = options[index];
-			const ok = (option._action == "mint" || option._action == "burn") && option._assetNameInHex && option._assetQuantity;
+			const ok = (option._action == "mint" || option._action == "burn") && option._assetId && option._assetQuantity;
 			if (!ok) {
 				throw new Error("Must provide valid: action, asset, quantity");
 			}
@@ -404,7 +404,7 @@ export class DkCardanoCli {
 			// In theory, for Mint we add (+), for Burn we subtract (-).
 			// By default, don't need add + for minting.
 			const plus = index < lastIndex ? "+" : "";
-			result += `${option._action == "mint" ? "" : "-"}${option._assetQuantity} ${option._assetNameInHex}${plus}`;
+			result += `${option._action == "mint" ? "" : "-"}${option._assetQuantity} ${option._assetId}${plus}`;
 		}
 
 		result = result.trimEnd() + `"`;
