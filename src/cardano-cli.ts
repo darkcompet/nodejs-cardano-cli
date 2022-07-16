@@ -3,7 +3,7 @@ import { DkConst } from "@darkcompet/js-core";
 import { DkCommand } from "@darkcompet/nodejs-core";
 
 import * as Model from "./model";
-import * as Const from "./constant";
+import { DkCardanoConst } from "./constant";
 
 /**
  * Note: constants are declared outside of class. Maybe leak to caller??
@@ -363,15 +363,15 @@ export class DkCardanoCli {
 			const txOutOption = txOuts[index];
 
 			// For ADA asset (lovelace)
-			if (!txOutOption._asset2quantity[Const.LOVELACE]) {
+			if (!txOutOption._asset2quantity[DkCardanoConst.LOVELACE]) {
 				throw new Error("Must send some lovelaces");
 			}
-			result += ` --tx-out ${txOutOption._address}+${txOutOption._asset2quantity[Const.LOVELACE]}`;
+			result += ` --tx-out ${txOutOption._address}+${txOutOption._asset2quantity[DkCardanoConst.LOVELACE]}`;
 
 			// For non-ADA asset (NFT,...)
 			let nonAdaAssetOption = DkConst.EMPTY_STRING;
 			for (const asset in txOutOption._asset2quantity) {
-				if (asset != Const.LOVELACE) {
+				if (asset != DkCardanoConst.LOVELACE) {
 					nonAdaAssetOption += `+${txOutOption._asset2quantity[asset]} ${asset}`;
 				}
 			}
