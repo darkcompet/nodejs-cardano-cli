@@ -101,7 +101,7 @@ export class DkCardanoCli {
 	 * @returns Generated protocol parameters file path.
 	 */
 	async GenerateProtocolParametersAsync(protocolOutFilePath: string): Promise<string> {
-		// By default, `query` command uses `--cardano-mode`.
+		// By default, `query` command uses --cardano-mode.
 		await Cmd.RunAsync(`${this.cliPath} query protocol-parameters ${this.network} --out-file ${protocolOutFilePath};`);
 
 		return protocolOutFilePath;
@@ -111,7 +111,7 @@ export class DkCardanoCli {
 	 * @returns Tip in json object.
 	 */
 	async QueryTipAsync(): Promise<Model.QueryTipJsonResponse> {
-		// By default, `query` command uses `--cardano-mode`.
+		// By default, `query` command uses --cardano-mode.
 		const response = await Cmd.RunAsync(`${this.cliPath} query tip ${this.network}`);
 		return JSON.parse(response.stdout!);
 	}
@@ -132,7 +132,7 @@ export class DkCardanoCli {
 		// a784adbd1878e3d58dae91aee6f76fef2a9940e7b336580b78d096c6e7723265     0        8413071 lovelace + TxOutDatumNone
 		// a784adbd1878e3d58dae91aee6f76fef2a9940e7b336580b78d096c6e7723265     1        1400000 lovelace + 2 9c9388a408baa82362eef736adef5ea5bbc65c65ea5ac7f135571cc7.646b6e66745f7465737432 + TxOutDatumNone
 
-		// By default, `query` command uses `--cardano-mode`.
+		// By default, `query` command uses --cardano-mode.
 		const utxo_result = await Cmd.RunAsync(`${this.cliPath} query utxo ${this.network} --address ${walletAddress};`);
 		const utxo_raw = utxo_result.stdout;
 		if (!utxo_raw) {
