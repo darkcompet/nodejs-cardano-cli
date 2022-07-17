@@ -1,6 +1,6 @@
 import { promises as fsAsync } from 'fs';
 import { DkConst } from "@darkcompet/js-core";
-import { DkCommand } from "@darkcompet/nodejs-core";
+import { DkCommander as Cmd } from "@darkcompet/nodejs-core";
 
 import * as Model from "./model";
 import { DkCardanoConst } from "./constant";
@@ -27,7 +27,7 @@ export class DkCardanoCli {
 	 * @returns File path of generated key pair.
 	 */
 	async GenerateAddressKeysAsync(vkeyOutFilePath: string, skeyOutFilePath: string): Promise<Model.KeyPair> {
-		await DkCommand.RunAsync(`${this.cliPath} address key-gen --verification-key-file ${vkeyOutFilePath} --signing-key-file ${skeyOutFilePath};`);
+		await Cmd.RunAsync(`${this.cliPath} address key-gen --verification-key-file ${vkeyOutFilePath} --signing-key-file ${skeyOutFilePath};`);
 
 		return {
 			_vkeyFilePath: vkeyOutFilePath,
@@ -45,7 +45,7 @@ export class DkCardanoCli {
 	 */
 	async BuildPaymentAddressAsync(paymentVkeyFilePath: string, paymentAddressOutFilePath: string): Promise<Model.PaymentAddress> {
 		// Generate payment address
-		await DkCommand.RunAsync(`
+		await Cmd.RunAsync(`
 			${this.cliPath} address build ${this.network} \
 				--payment-verification-key-file ${paymentVkeyFilePath} \
 				--out-file ${paymentAddressOutFilePath};
@@ -75,9 +75,9 @@ export class DkCardanoCli {
 	 * @returns Key hash of given address.
 	 */
 	async CalculateKeyHashOfPaymentAddress(paymentVerificationKeyFilePath: string): Promise<string> {
-		const response = await DkCommand.RunAsync(`${this.cliPath} address key-hash --payment-verification-key-file ${paymentVerificationKeyFilePath}`);
+		const response = await Cmd.RunAsync(`${this.cliPath} address key-hash --payment-verification-key-file ${paymentVerificationKeyFilePath}`);
 
-		return response.stdout.trim();
+		return response.stdout!.trim();
 	}
 
 	/**
@@ -88,7 +88,7 @@ export class DkCardanoCli {
 	 */
 	async GeneratePolicyIdAsync(policyScriptInFilePath: string, policyIdOutFilePath: string): Promise<string> {
 		// Generate policy id file
-		await DkCommand.RunAsync(`${this.cliPath} transaction policyid --script-file ${policyScriptInFilePath} > ${policyIdOutFilePath};`);
+		await Cmd.RunAsync(`${this.cliPath} transaction policyid --script-file ${policyScriptInFilePath} > ${policyIdOutFilePath};`);
 
 		// Read entire file content
 		const policyBuffer = await fsAsync.readFile(policyIdOutFilePath);
@@ -101,8 +101,8 @@ export class DkCardanoCli {
 	 * @returns Generated protocol parameters file path.
 	 */
 	async GenerateProtocolParametersAsync(protocolOutFilePath: string): Promise<string> {
-		// By default `query` command uses `--cardano-mode`, but we still declare for more clear.
-		await DkCommand.RunAsync(`${this.cliPath} query protocol-parameters ${this.network} --cardano-mode --out-file ${protocolOutFilePath};`);
+		// By default, `query` command uses `--cardano-mode`.
+		await Cmd.RunAsync(`${this.cliPath} query protocol-parameters ${this.network} --out-file ${protocolOutFilePath};`);
 
 		return protocolOutFilePath;
 	}
@@ -111,9 +111,9 @@ export class DkCardanoCli {
 	 * @returns Tip in json object.
 	 */
 	async QueryTipAsync(): Promise<Model.QueryTipJsonResponse> {
-		// By default `query` command uses `--cardano-mode`, but we still declare for more clear.
-		const response = await DkCommand.RunAsync(`${this.cliPath} query tip ${this.network} --cardano-mode`);
-		return JSON.parse(response.stdout);
+		// By default, `query` command uses `--cardano-mode`.
+		const response = await Cmd.RunAsync(`${this.cliPath} query tip ${this.network}`);
+		return JSON.parse(response.stdout!);
 	}
 
 	/**
@@ -132,11 +132,8 @@ export class DkCardanoCli {
 		// a784adbd1878e3d58dae91aee6f76fef2a9940e7b336580b78d096c6e7723265     0        8413071 lovelace + TxOutDatumNone
 		// a784adbd1878e3d58dae91aee6f76fef2a9940e7b336580b78d096c6e7723265     1        1400000 lovelace + 2 9c9388a408baa82362eef736adef5ea5bbc65c65ea5ac7f135571cc7.646b6e66745f7465737432 + TxOutDatumNone
 
-		// By default `query` command uses `--cardano-mode`, but we still declare for more clear.
-		const utxo_result = await DkCommand.RunAsync(`
-			${this.cliPath} query utxo ${this.network} --address ${walletAddress} --cardano-mode;
-		`);
-
+		// By default, `query` command uses `--cardano-mode`.
+		const utxo_result = await Cmd.RunAsync(`${this.cliPath} query utxo ${this.network} --address ${walletAddress};`);
 		const utxo_raw = utxo_result.stdout;
 		if (!utxo_raw) {
 			return utxos;
@@ -166,14 +163,13 @@ export class DkCardanoCli {
 				}
 
 				// Parse asset
-				let [quantity, name] = segment.trim().split(DkConst.SPACE);
-				quantity = parseInt(quantity);
+				const [quantity, asset] = segment.trim().split(DkConst.SPACE);
 
 				// It is should not happen, but for safe, we should sum up.
-				if (!asset2quantity[name]) {
-					asset2quantity[name] = 0;
+				if (!asset2quantity[asset]) {
+					asset2quantity[asset] = 0;
 				}
-				asset2quantity[name] += quantity;
+				asset2quantity[asset] += parseInt(quantity);
 			}
 
 			utxos.push({
@@ -237,7 +233,7 @@ export class DkCardanoCli {
 		const invalidBeforeOption = option._invalidBefore ? `--invalid-before ${option._invalidBefore}` : DkConst.EMPTY_STRING;
 		const invalidHereAfterOption = option._invalidAfter ? `--invalid-hereafter ${option._invalidAfter}` : DkConst.EMPTY_STRING;
 
-		await DkCommand.RunAsync(`
+		await Cmd.RunAsync(`
 			${this.cliPath} transaction build-raw \
 				${txInOption} \
 				${txOutOption} \
@@ -264,7 +260,7 @@ export class DkCardanoCli {
 	 * @returns Minimum fee in lovelace unit.
 	 */
 	async CalculateTransactionMinFeeAsync(option: Model.CalculateTransactionMinFeeOption): Promise<number> {
-		const response = await DkCommand.RunAsync(`
+		const response = await Cmd.RunAsync(`
 			${this.cliPath} transaction calculate-min-fee ${this.network} \
 				--tx-body-file ${option._txRawBodyFilePath} \
 				--tx-in-count ${option._txInCount} \
@@ -273,7 +269,7 @@ export class DkCardanoCli {
 				--protocol-params-file ${option._protocolParametersFilePath}
 		`);
 
-		return parseInt(response.stdout.trim().split(DkConst.SPACE)[0]);
+		return parseInt(response.stdout!.trim().split(DkConst.SPACE)[0]);
 	}
 
 	/**
@@ -286,7 +282,7 @@ export class DkCardanoCli {
 	async SignTransactionAsync(option: Model.SignTransactionOption): Promise<string> {
 		const signingKeyOption = option._skeyFilePaths.map(filePath => `--signing-key-file ${filePath}`).join(DkConst.SPACE);
 
-		await DkCommand.RunAsync(`
+		await Cmd.RunAsync(`
 			${this.cliPath} transaction sign ${this.network} \
 				--tx-body-file ${option._txRawBodyFilePath} \
 				${signingKeyOption} \
@@ -301,7 +297,7 @@ export class DkCardanoCli {
 	 * @returns Transaction hash.
 	 */
 	async SubmitTransactionAsync(option: Model.SubmitTransactionOption): Promise<string> {
-		await DkCommand.RunAsync(`${this.cliPath} transaction submit ${this.network} --tx-file ${option._txSignedBodyFilePath}`);
+		await Cmd.RunAsync(`${this.cliPath} transaction submit ${this.network} --tx-file ${option._txSignedBodyFilePath}`);
 
 		return this.QueryTransactionIdAsync({ _txFilePath: option._txSignedBodyFilePath });
 	}
@@ -319,9 +315,9 @@ export class DkCardanoCli {
 			throw new Error("Must provide one of: txFilePath or txBodyFilePath");
 		}
 
-		const response = await DkCommand.RunAsync(`${this.cliPath} transaction txid ${txOption}`);
+		const response = await Cmd.RunAsync(`${this.cliPath} transaction txid ${txOption}`);
 
-		return response.stdout.trim();
+		return response.stdout!.trim();
 	}
 
 	private async BuildTxInOptionAsync(txIns: Model.TxIn[], isCollateral: boolean = false): Promise<string> {
