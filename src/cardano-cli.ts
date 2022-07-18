@@ -298,7 +298,7 @@ export class DkCardanoCli {
 	 * @param option tx_signed_body_file_path
 	 * @returns
 	 */
-	async QueryTransactionIdAsync(option: Model.QueryTransactionIdOption): Promise<string> {
+	async QueryTransactionIdAsync(option: Model.QueryTransactionIdOption): Promise<string | null> {
 		let txOption = DkConst.EMPTY_STRING;
 		if (option._txFilePath) {
 			txOption += `--tx-file ${option._txFilePath}`
@@ -313,7 +313,7 @@ export class DkCardanoCli {
 
 		const response = await Cmd.RunAsync(`${this.cliPath} transaction txid ${txOption}`);
 
-		return response.stdout!.trim();
+		return response.stdout ?? null;
 	}
 
 	private async _BuildTxInOptionAsync(txIns: Model.TxIn[], isCollateral: boolean = false): Promise<string> {
