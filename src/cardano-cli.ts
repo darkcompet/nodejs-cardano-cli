@@ -1,9 +1,9 @@
-import { promises as fsAsync } from 'fs';
 import { DkConst } from "@darkcompet/js-core";
-import { DkCommander as Cmd } from "@darkcompet/nodejs-core";
+import { DkCommander as Cmd, RunCommandResult } from "@darkcompet/nodejs-core";
 
 import * as Model from "./model";
 import { DkCardanoConst } from "./constant";
+import DkFiles from "@darkcompet/nodejs-core/dist/file-system";
 
 /**
  * Note: constants are declared outside of class. Maybe leak to caller??
@@ -51,22 +51,12 @@ export class DkCardanoCli {
 				--out-file ${paymentAddressOutFilePath};
 		`);
 
-		const paymentAddressBuffer = await fsAsync.readFile(paymentAddressOutFilePath);
+		const paymentAddressContent = await DkFiles.ReadFileOrThrowAsync(paymentAddressOutFilePath);
 
 		return {
-			_paymentAddress: paymentAddressBuffer.toString().trim(),
+			_paymentAddress: paymentAddressContent.trim(),
 			_paymentAddressFilePath: paymentAddressOutFilePath
 		};
-	}
-
-	/**
-	 * @param outFilePath
-	 * @param outContent
-	 * @returns Generated file path.
-	 */
-	async WriteFileAsync(outFilePath: string, outContent: string): Promise<string> {
-		await fsAsync.writeFile(outFilePath, outContent);
-		return outFilePath;
 	}
 
 	/**
@@ -91,9 +81,9 @@ export class DkCardanoCli {
 		await Cmd.RunAsync(`${this.cliPath} transaction policyid --script-file ${policyScriptInFilePath} > ${policyIdOutFilePath};`);
 
 		// Read entire file content
-		const policyBuffer = await fsAsync.readFile(policyIdOutFilePath);
+		const policyIdContent = await DkFiles.ReadFileOrThrowAsync(policyIdOutFilePath);
 
-		return policyBuffer.toString().trim();
+		return policyIdContent.trim();
 	}
 
 	/**
@@ -221,14 +211,14 @@ export class DkCardanoCli {
 	 */
 	async BuildRawTransactionAsync(option: Model.BuildRawTransactionOption): Promise<string> {
 		const eraOption = option._era ? option._era : DkConst.EMPTY_STRING; // "--alonzo-era";
-		const txInOption = await this.BuildTxInOptionAsync(option._txIns);
-		const txOutOption = this.BuildTxOutOption(option._txOuts);
-		const txInCollateralOption = option._txInCollateralOptions ? await this.BuildTxInOptionAsync(option._txInCollateralOptions, true) : DkConst.EMPTY_STRING;
-		const mintOption = option._mintOptions ? await this.BuildMintOptionAsync(option._mintOptions) : DkConst.EMPTY_STRING;
-		const withdrawalOption = option._withdrawalOptions ? await this.BuildWithdrawalOptionAsync(option._withdrawalOptions) : DkConst.EMPTY_STRING;
-		const certsOption = option._certsOption ? await this.BuildCertOptionAsync(option._certsOption) : DkConst.EMPTY_STRING;
-		const metadataOption = option._metadataOption ? await this.BuildMetadataOptionAsync(option._metadataOption) : DkConst.EMPTY_STRING;
-		const auxScriptOpion = option._auxScriptOptions ? await this.BuildAuxScriptOptionAsync(option._auxScriptOptions) : DkConst.EMPTY_STRING;
+		const txInOption = await this._BuildTxInOptionAsync(option._txIns);
+		const txOutOption = this._BuildTxOutOption(option._txOuts);
+		const txInCollateralOption = option._txInCollateralOptions ? await this._BuildTxInOptionAsync(option._txInCollateralOptions, true) : DkConst.EMPTY_STRING;
+		const mintOption = option._mintOptions ? await this._BuildMintOptionAsync(option._mintOptions) : DkConst.EMPTY_STRING;
+		const withdrawalOption = option._withdrawalOptions ? await this._BuildWithdrawalOptionAsync(option._withdrawalOptions) : DkConst.EMPTY_STRING;
+		const certsOption = option._certsOption ? await this._BuildCertOptionAsync(option._certsOption) : DkConst.EMPTY_STRING;
+		const metadataOption = option._metadataOption ? await this._BuildMetadataOptionAsync(option._metadataOption) : DkConst.EMPTY_STRING;
+		const auxScriptOpion = option._auxScriptOptions ? await this._BuildAuxScriptOptionAsync(option._auxScriptOptions) : DkConst.EMPTY_STRING;
 		const scriptInvalidOption = option._scriptInvalid ? "--script-invalid" : DkConst.EMPTY_STRING;
 		const invalidBeforeOption = option._invalidBefore ? `--invalid-before ${option._invalidBefore}` : DkConst.EMPTY_STRING;
 		const invalidHereAfterOption = option._invalidAfter ? `--invalid-hereafter ${option._invalidAfter}` : DkConst.EMPTY_STRING;
@@ -293,16 +283,22 @@ export class DkCardanoCli {
 	}
 
 	/**
-	 * In general, caller should sign a transaction before call this.
-	 * @returns Transaction hash.
+	 * In general, caller sign a transaction before call this.
+	 *
+	 * @param option
+	 * @returns Command result.
 	 */
-	async SubmitTransactionAsync(option: Model.SubmitTransactionOption): Promise<string> {
-		await Cmd.RunAsync(`${this.cliPath} transaction submit ${this.network} --tx-file ${option._txSignedBodyFilePath}`);
-
-		return this.QueryTransactionIdAsync({ _txFilePath: option._txSignedBodyFilePath });
+	async SubmitTransactionAsync(option: Model.SubmitTransactionOption): Promise<RunCommandResult> {
+		return await Cmd.RunAsync(`${this.cliPath} transaction submit ${this.network} --tx-file ${option._txSignedBodyFilePath}`);
 	}
 
-	private async QueryTransactionIdAsync(option: Model.QueryTransactionIdOption): Promise<string> {
+	/**
+	 * Query tx id from the tx-body file path
+	 *
+	 * @param option tx_signed_body_file_path
+	 * @returns
+	 */
+	async QueryTransactionIdAsync(option: Model.QueryTransactionIdOption): Promise<string> {
 		let txOption = DkConst.EMPTY_STRING;
 		if (option._txFilePath) {
 			txOption += `--tx-file ${option._txFilePath}`
@@ -320,7 +316,7 @@ export class DkCardanoCli {
 		return response.stdout!.trim();
 	}
 
-	private async BuildTxInOptionAsync(txIns: Model.TxIn[], isCollateral: boolean = false): Promise<string> {
+	private async _BuildTxInOptionAsync(txIns: Model.TxIn[], isCollateral: boolean = false): Promise<string> {
 		let result = DkConst.EMPTY_STRING;
 
 		for (const option of txIns) {
@@ -330,7 +326,7 @@ export class DkCardanoCli {
 				if (!option._script._outFilePath || !option._script._outContent) {
 					throw new Error("Script file path and content are needed");
 				}
-				await fsAsync.writeFile(option._script._outFilePath, option._script._outContent);
+				await DkFiles.WriteFileOrThrowAsync(option._script._outFilePath, option._script._outContent);
 				const scriptFilePath = option._script._outFilePath;
 				result += ` --tx-in-script-file ${scriptFilePath}`;
 			}
@@ -352,7 +348,7 @@ export class DkCardanoCli {
 	 * @param txOuts
 	 * @returns For eg,. --tx-out addr_test1Alsdkadsk+4800000+"10 mynft1+32 mynft2"
 	 */
-	private BuildTxOutOption(txOuts: Model.TxOut[]): string {
+	private _BuildTxOutOption(txOuts: Model.TxOut[]): string {
 		let result = DkConst.EMPTY_STRING;
 
 		for (let index = 0, N = txOuts.length; index < N; ++index) {
@@ -384,7 +380,7 @@ export class DkCardanoCli {
 		return result.trimStart();
 	}
 
-	private async BuildMintOptionAsync(options: Array<Model.MintInfo>): Promise<string> {
+	private async _BuildMintOptionAsync(options: Array<Model.MintInfo>): Promise<string> {
 		// [Build --mint]
 		// For burn, just add - before asset quantity.
 		// For eg,. --mint="1 policyidA.mynftA+5 policyidB.mynftB+-2 policyidC.mynftC"
@@ -422,14 +418,14 @@ export class DkCardanoCli {
 		return result;
 	}
 
-	private async BuildWithdrawalOptionAsync(options: Model.WithdrawalOption[]): Promise<string> {
+	private async _BuildWithdrawalOptionAsync(options: Model.WithdrawalOption[]): Promise<string> {
 		let result = DkConst.EMPTY_STRING;
 
 		for (const option of options) {
 			result += ` --withdrawal ${option._stakingAddress}+${option._reward}`;
 
 			if (option._scriptOutContent) {
-				await fsAsync.writeFile(option._scriptOutFilePath, option._scriptOutContent);
+				await DkFiles.WriteFileOrThrowAsync(option._scriptOutFilePath, option._scriptOutContent);
 				const scriptInFilePath = option._scriptOutFilePath;
 				result += ` --withdrawal-script-file ${scriptInFilePath}`;
 			}
@@ -447,14 +443,14 @@ export class DkCardanoCli {
 		return result.trim();
 	}
 
-	private async BuildCertOptionAsync(options: Model.CertOption[]): Promise<string> {
+	private async _BuildCertOptionAsync(options: Model.CertOption[]): Promise<string> {
 		let result = DkConst.EMPTY_STRING;
 
 		for (const option of options) {
 			result += ` --certificate ${option._cert}`;
 
 			if (option._script) {
-				await fsAsync.writeFile(option._script._outFilePath, option._script._outContent);
+				await DkFiles.WriteFileOrThrowAsync(option._script._outFilePath, option._script._outContent);
 				result += ` --certificate-script-file ${option._script._outFilePath}`;
 			}
 			if (option._datum) {
@@ -471,19 +467,19 @@ export class DkCardanoCli {
 		return result.trim();
 	}
 
-	private async BuildMetadataOptionAsync(option: Model.MetadataOption): Promise<string> {
-		await fsAsync.writeFile(option._metadataOutFilePath, option._metadataOutContent);
+	private async _BuildMetadataOptionAsync(option: Model.MetadataOption): Promise<string> {
+		await DkFiles.WriteFileOrThrowAsync(option._metadataOutFilePath, option._metadataOutContent);
 
 		const metadataInFilePath = option._metadataOutFilePath;
 
 		return `--metadata-json-file ${metadataInFilePath}`;
 	}
 
-	private async BuildAuxScriptOptionAsync(options: Model.AuxScriptOption[]) {
+	private async _BuildAuxScriptOptionAsync(options: Model.AuxScriptOption[]) {
 		let result = DkConst.EMPTY_STRING;
 
 		for (const option of options) {
-			await fsAsync.writeFile(option._script._outFilePath, option._script._outContent);
+			await DkFiles.WriteFileOrThrowAsync(option._script._outFilePath, option._script._outContent);
 			result += ` --auxiliary-script-file ${option._script._outFilePath}`;
 		}
 
