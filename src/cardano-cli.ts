@@ -1,9 +1,8 @@
 import { DkConst } from "@darkcompet/js-core";
-import { DkCommander as Cmd, RunCommandResult } from "@darkcompet/nodejs-core";
+import { DkCommander as Cmd, DkFiles, RunCommandResult } from "@darkcompet/nodejs-core";
 
 import * as Model from "./model";
 import { DkCardanoConst } from "./constant";
-import DkFiles from "@darkcompet/nodejs-core/dist/file-system";
 
 /**
  * Note: constants are declared outside of class. Maybe leak to caller??
