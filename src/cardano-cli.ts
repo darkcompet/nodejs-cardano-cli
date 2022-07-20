@@ -65,7 +65,9 @@ export class DkCardanoCli {
 	 */
 	async CalculateKeyHashOfPaymentAddress(paymentVerificationKeyFilePath: string): Promise<string> {
 		const response = await Cmd.RunAsync(`${this.cliPath} address key-hash --payment-verification-key-file ${paymentVerificationKeyFilePath}`);
-
+		if (response.stderr) {
+			throw new Error(`Could not read key hash, error: ${response.stderr}`);
+		}
 		return response.stdout!.trim();
 	}
 
@@ -258,6 +260,10 @@ export class DkCardanoCli {
 				--protocol-params-file ${option._protocolParametersFilePath}
 		`);
 
+		if (response.stderr) {
+			throw new Error(`Failed to calculate min-fee, error: ${response.stderr}`);
+		}
+
 		return parseInt(response.stdout!.trim().split(DkConst.SPACE)[0]);
 	}
 
@@ -292,7 +298,8 @@ export class DkCardanoCli {
 	}
 
 	/**
-	 * Query tx id from the tx-body file path
+	 * Query tx id from the tx-body file path.
+	 * We don't throw exception if cannot get tx-id since this function is normally called after submit tx.
 	 *
 	 * @param option tx_signed_body_file_path
 	 * @returns
@@ -312,7 +319,7 @@ export class DkCardanoCli {
 
 		const response = await Cmd.RunAsync(`${this.cliPath} transaction txid ${txOption}`);
 
-		return response.stdout ?? null;
+		return response.stdout;
 	}
 
 	private async _BuildTxInOptionAsync(txIns: Model.TxIn[], isCollateral: boolean = false): Promise<string> {
