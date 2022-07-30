@@ -9,6 +9,11 @@ export interface ConstructOption {
 	 * For eg,. --mainnet, --testnet-magic 1097911063
 	 */
 	_network: string;
+
+	/**
+	 * For eg,. --alonzo-era
+	 */
+	 _era: string;
 }
 
 export interface TxIn {
@@ -141,8 +146,6 @@ export interface BuildRawTransactionOption {
 	_scriptInvalid?: boolean;
 	_invalidBefore?: number;
 	_invalidAfter?: number;
-
-	_era?: string;
 }
 
 export interface WithdrawalOption {

@@ -8,12 +8,26 @@ import { DkCardanoConst } from "./constant";
  * Note: constants are declared outside of class. Maybe leak to caller??
  */
 export class DkCardanoCli {
-	cliPath: string; // cardano-cli command path
-	network: string; // mainnet or testnet
+	/**
+	 * Path of cardano-cli command.
+	 */
+	private readonly cliPath: string;
+
+	/**
+	 * --mainnet or --testnet-magic 1097911063
+	 */
+	private readonly network: string;
+
+	/**
+	 * Default is: --alonzo-era
+	 * To unset era, just provide empty string (not null).
+	 */
+	private readonly era: string;
 
 	constructor(option: Model.ConstructOption) {
 		this.cliPath = option._cliPath;
 		this.network = option._network;
+		this.era = option._era ?? "--alonzo-era";
 	}
 
 	/**
@@ -211,7 +225,6 @@ export class DkCardanoCli {
 	 * @returns Tx raw body file path.
 	 */
 	async BuildRawTransactionAsync(option: Model.BuildRawTransactionOption): Promise<string> {
-		const eraOption = option._era ? option._era : DkConst.EMPTY_STRING; // "--alonzo-era";
 		const txInOption = await this._BuildTxInOptionAsync(option._txIns);
 		const txOutOption = this._BuildTxOutOption(option._txOuts);
 		const txInCollateralOption = option._txInCollateralOptions ? await this._BuildTxInOptionAsync(option._txInCollateralOptions, true) : DkConst.EMPTY_STRING;
@@ -225,7 +238,7 @@ export class DkCardanoCli {
 		const invalidHereAfterOption = option._invalidAfter ? `--invalid-hereafter ${option._invalidAfter}` : DkConst.EMPTY_STRING;
 
 		await Cmd.RunAsync(`
-			${this.cliPath} transaction build-raw \
+			${this.cliPath} transaction build-raw ${this.era} \
 				${txInOption} \
 				${txOutOption} \
 				${txInCollateralOption} \
@@ -240,7 +253,6 @@ export class DkCardanoCli {
 				--fee ${option._fee} \
 				--out-file ${option._txRawBodyOutFilePath} \
 				--protocol-params-file ${option._protocolParametersFilePath} \
-				${eraOption}
 		`);
 
 		return option._txRawBodyOutFilePath;
