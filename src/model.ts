@@ -13,7 +13,7 @@ export interface ConstructOption {
 	/**
 	 * For eg,. --alonzo-era
 	 */
-	 _era: string;
+	 _era?: string|null;
 }
 
 export interface TxIn {
