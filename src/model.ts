@@ -73,17 +73,6 @@ export interface ScriptDetail {
 	_outContent: string;
 }
 
-export interface WalletInfo {
-	/**
-	 * For eg,. {
-	 *   "lovelace": 1400000,
-	 *   "mynft1": 2,
-	 * }
-	 */
-	_balance: any;
-	_utxos: Utxo[];
-}
-
 // Do NOT change property names since they are fixed.
 export interface QueryTipJsonResponse {
 	era: string; // "Alonzo"
