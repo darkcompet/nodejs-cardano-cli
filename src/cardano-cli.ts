@@ -34,10 +34,10 @@ export class DkCardanoCli {
 	 * Generate verification key and signing key of Cardano blockchain.
 	 * It is required when we create new wallet, token, NFT,...
 	 *
-	 * @param vkeyOutFilePath Where to export verification key (.vkey)
-	 * @param skeyOutFilePath Where to export signing key (.skey)
+	 * @param vkeyOutFilePath OutFilePath for export verification key (.vkey)
+	 * @param skeyOutFilePath OutFilePath for export signing key (.skey)
 	 *
-	 * @returns File path of generated key pair.
+	 * @returns File paths of generated key pair.
 	 */
 	async GenerateAddressKeyPairAsync(vkeyOutFilePath: string, skeyOutFilePath: string): Promise<Model.KeyPair> {
 		await Cmd.RunAsync(`${this.cliPath} address key-gen --verification-key-file ${vkeyOutFilePath} --signing-key-file ${skeyOutFilePath};`);
@@ -75,13 +75,13 @@ export class DkCardanoCli {
 	/**
 	 * Calculate key hash from given payment (wallet) vkey file.
 	 *
-	 * @param paymentVerificationKeyFilePath
-	 * @returns Key hash of given address.
+	 * @param paymentVerificationKeyFilePath Normally it is policy vkey, payment address vkey,...
+	 * @returns Key hash of given vkeyFilePath.
 	 */
-	async CalculateKeyHashOfPaymentAddress(paymentVerificationKeyFilePath: string): Promise<string> {
+	async CalculateKeyHash(paymentVerificationKeyFilePath: string): Promise<string> {
 		const response = await Cmd.RunAsync(`${this.cliPath} address key-hash --payment-verification-key-file ${paymentVerificationKeyFilePath}`);
 		if (response.stderr) {
-			throw new Error(`Could not read key hash, error: ${response.stderr}`);
+			throw new Error(`Could not calculate key hash, error: ${response.stderr}`);
 		}
 		return response.stdout!.trim();
 	}
