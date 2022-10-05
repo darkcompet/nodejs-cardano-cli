@@ -37,10 +37,14 @@ export class DkCardanoCli {
 	 * @param vkeyOutFilePath OutFilePath for export verification key (.vkey)
 	 * @param skeyOutFilePath OutFilePath for export signing key (.skey)
 	 *
+	 * @throws Error if something go wrong.
 	 * @returns File paths of generated key pair.
 	 */
-	async GenerateAddressKeyPairAsync(vkeyOutFilePath: string, skeyOutFilePath: string): Promise<Model.KeyPair> {
-		await Cmd.RunAsync(`${this.cliPath} address key-gen --verification-key-file ${vkeyOutFilePath} --signing-key-file ${skeyOutFilePath};`);
+	async GenerateAddressKeyPairAsyncOrThrow(vkeyOutFilePath: string, skeyOutFilePath: string): Promise<Model.KeyPair> {
+		const response = await Cmd.RunAsync(`${this.cliPath} address key-gen --verification-key-file ${vkeyOutFilePath} --signing-key-file ${skeyOutFilePath};`);
+		if (response.stderr) {
+			throw new Error(`Could not generate address key pair, error: ${response.stderr}`);
+		}
 
 		return {
 			_vkeyFilePath: vkeyOutFilePath,
@@ -54,15 +58,20 @@ export class DkCardanoCli {
 	 * @param paymentVkeyFilePath vkey file path
 	 * @param paymentAddressOutFilePath wallet address out file path
 	 *
+	 * @throws Error if something go wrong.
 	 * @returns Generated payment address and its file path.
 	 */
-	async BuildPaymentAddressAsync(paymentVkeyFilePath: string, paymentAddressOutFilePath: string): Promise<Model.PaymentAddress> {
+	async BuildPaymentAddressAsyncOrThrow(paymentVkeyFilePath: string, paymentAddressOutFilePath: string): Promise<Model.PaymentAddress> {
 		// Generate payment address
-		await Cmd.RunAsync(`
+		const response = await Cmd.RunAsync(`
 			${this.cliPath} address build ${this.network} \
 				--payment-verification-key-file ${paymentVkeyFilePath} \
 				--out-file ${paymentAddressOutFilePath};
 		`);
+
+		if (response.stderr) {
+			throw new Error(`Could not build payment address, error: ${response.stderr}`);
+		}
 
 		const paymentAddressContent = await DkFiles.ReadFileOrThrowAsync(paymentAddressOutFilePath);
 
@@ -76,9 +85,11 @@ export class DkCardanoCli {
 	 * Calculate key hash from given payment (wallet) vkey file.
 	 *
 	 * @param paymentVerificationKeyFilePath Normally it is policy vkey, payment address vkey,...
+	 *
+	 * @throws Error if something go wrong.
 	 * @returns Key hash of given vkeyFilePath.
 	 */
-	async CalculateKeyHash(paymentVerificationKeyFilePath: string): Promise<string> {
+	async CalculateKeyHashOrThrow(paymentVerificationKeyFilePath: string): Promise<string> {
 		const response = await Cmd.RunAsync(`${this.cliPath} address key-hash --payment-verification-key-file ${paymentVerificationKeyFilePath}`);
 		if (response.stderr) {
 			throw new Error(`Could not calculate key hash, error: ${response.stderr}`);
@@ -91,11 +102,16 @@ export class DkCardanoCli {
 	 *
 	 * @param policyScriptInFilePath Policy script file path.
 	 * @param policyIdOutFilePath To be used to store generated policy id.
+	 *
+	 * @throws Error if something go wrong.
 	 * @returns Generated policy id.
 	 */
-	async GeneratePolicyIdAsync(policyScriptInFilePath: string, policyIdOutFilePath: string): Promise<string> {
+	async GeneratePolicyIdAsyncOrThrow(policyScriptInFilePath: string, policyIdOutFilePath: string): Promise<string> {
 		// Generate policy id file
-		await Cmd.RunAsync(`${this.cliPath} transaction policyid --script-file ${policyScriptInFilePath} > ${policyIdOutFilePath};`);
+		const response = await Cmd.RunAsync(`${this.cliPath} transaction policyid --script-file ${policyScriptInFilePath} > ${policyIdOutFilePath};`);
+		if (response.stderr) {
+			throw new Error(`Could not generate policy, error: ${response.stderr}`);
+		}
 
 		// Read entire file content
 		const policyId = await DkFiles.ReadFileOrThrowAsync(policyIdOutFilePath);
@@ -107,23 +123,31 @@ export class DkCardanoCli {
 	 * Generate protocol parameter file.
 	 *
 	 * @param protocolOutFilePath Where to write output.
+	 *
+	 * @throws Error if something go wrong.
 	 * @returns Generated protocol parameters file path.
 	 */
-	async GenerateProtocolParametersAsync(protocolOutFilePath: string): Promise<string> {
+	async GenerateProtocolParametersAsyncOrThrow(protocolOutFilePath: string): Promise<string> {
 		// By default, `query` command uses --cardano-mode.
-		await Cmd.RunAsync(`${this.cliPath} query protocol-parameters ${this.network} --out-file ${protocolOutFilePath};`);
-
+		const response = await Cmd.RunAsync(`${this.cliPath} query protocol-parameters ${this.network} --out-file ${protocolOutFilePath};`);
+		if (response.stderr) {
+			throw new Error(`Could not generate protocol, error: ${response.stderr}`);
+		}
 		return protocolOutFilePath;
 	}
 
 	/**
 	 * Query current tip at blockchain.
 	 *
+	 * @throws Error if something go wrong.
 	 * @returns Tip in json object.
 	 */
-	async QueryTipAsync(): Promise<Model.QueryTipJsonResponse> {
+	async QueryTipAsyncOrThrow(): Promise<Model.QueryTipJsonResponse> {
 		// By default, `query` command uses --cardano-mode.
 		const response = await Cmd.RunAsync(`${this.cliPath} query tip ${this.network}`);
+		if (response.stderr) {
+			throw new Error(`Could not query tip, error: ${response.stderr}`);
+		}
 		return JSON.parse(response.stdout!);
 	}
 
@@ -131,9 +155,11 @@ export class DkCardanoCli {
 	 * Query utxo (balance) from given wallet.
 	 *
 	 * @param walletAddress For eg,. addr_test1vz2exa3va5pddrw33ldxtsnfpp4p0g92ep9np3fvz37a39saqac6q
+	 *
+	 * @throws Error if something go wrong.
 	 * @returns
 	 */
-	async QueryUtxoAsync(walletAddress: string): Promise<Model.Utxo[]> {
+	async QueryUtxoAsyncOrThrow(walletAddress: string): Promise<Model.Utxo[]> {
 		const utxos: Model.Utxo[] = [];
 
 		// Command: cardano-cli query utxo --address addr_test1vz2exa3va5pddrw33ldxtsnfpp4p0g92ep9np3fvz37a39saqac6q --testnet-magic 1097911063
@@ -146,8 +172,11 @@ export class DkCardanoCli {
 		// a784adbd1878e3d58dae91aee6f76fef2a9940e7b336580b78d096c6e7723265     1        1400000 lovelace + 2 9c9388a408baa82362eef736adef5ea5bbc65c65ea5ac7f135571cc7.646b6e66745f7465737432 + TxOutDatumNone
 
 		// By default, `query` command uses --cardano-mode.
-		const utxo_result = await Cmd.RunAsync(`${this.cliPath} query utxo ${this.network} --address ${walletAddress};`);
-		const utxo_raw = utxo_result.stdout;
+		const response = await Cmd.RunAsync(`${this.cliPath} query utxo ${this.network} --address ${walletAddress};`);
+		if (response.stderr) {
+			throw new Error(`Could not query utxo, error: ${response.stderr}`);
+		}
+		const utxo_raw = response.stdout;
 		if (!utxo_raw) {
 			return utxos;
 		}
@@ -200,9 +229,11 @@ export class DkCardanoCli {
 	 * See command usage: cardano-cli transaction build-raw -h
 	 *
 	 * @param option
+	 *
+	 * @throws Error if something go wrong.
 	 * @returns Tx raw body file path.
 	 */
-	async BuildRawTransactionAsync(option: Model.BuildRawTransactionOption): Promise<string> {
+	async BuildRawTransactionAsyncOrThrow(option: Model.BuildRawTransactionOption): Promise<string> {
 		const txInOption = await Helper._BuildTxInOptionAsync(option._txIns);
 		const txOutOption = Helper._BuildTxOutOption(option._txOuts);
 		const txInCollateralOption = option._txInCollateralOptions ? await Helper._BuildTxInOptionAsync(option._txInCollateralOptions, true) : DkConst.EMPTY_STRING;
@@ -215,7 +246,7 @@ export class DkCardanoCli {
 		const invalidBeforeOption = option._invalidBefore ? `--invalid-before ${option._invalidBefore}` : DkConst.EMPTY_STRING;
 		const invalidHereAfterOption = option._invalidAfter ? `--invalid-hereafter ${option._invalidAfter}` : DkConst.EMPTY_STRING;
 
-		await Cmd.RunAsync(`
+		const response = await Cmd.RunAsync(`
 			${this.cliPath} transaction build-raw ${this.era} \
 				${txInOption} \
 				${txOutOption} \
@@ -233,6 +264,10 @@ export class DkCardanoCli {
 				--protocol-params-file ${option._protocolParametersFilePath} \
 		`);
 
+		if (response.stderr) {
+			throw new Error(`Could not build raw tx, error: ${response.stderr}`);
+		}
+
 		return option._txRawBodyOutFilePath;
 	}
 
@@ -240,9 +275,11 @@ export class DkCardanoCli {
 	 * Calculate min-fee of a transaction.
 	 *
 	 * @param option
+	 *
+	 * @throws Error if something go wrong.
 	 * @returns Minimum fee in lovelace unit.
 	 */
-	async CalculateTransactionMinFeeAsync(option: Model.CalculateTransactionMinFeeOption): Promise<number> {
+	async CalculateTransactionMinFeeAsyncOrThrow(option: Model.CalculateTransactionMinFeeOption): Promise<number> {
 		const response = await Cmd.RunAsync(`
 			${this.cliPath} transaction calculate-min-fee ${this.network} \
 				--tx-body-file ${option._txRawBodyFilePath} \
@@ -253,7 +290,7 @@ export class DkCardanoCli {
 		`);
 
 		if (response.stderr) {
-			throw new Error(`Failed to calculate min-fee, error: ${response.stderr}`);
+			throw new Error(`Could not calculate tx min-fee, error: ${response.stderr}`);
 		}
 
 		return parseInt(response.stdout!.trim().split(DkConst.SPACE)[0]);
@@ -265,17 +302,23 @@ export class DkCardanoCli {
 	 * In general, caller should build raw transaction before call this.
 	 *
 	 * @param option
+	 *
+	 * @throws Error if something go wrong.
 	 * @returns Tx signed body out-file path.
 	 */
-	async SignTransactionAsync(option: Model.SignTransactionOption): Promise<string> {
+	async SignTransactionAsyncOrThrow(option: Model.SignTransactionOption): Promise<string> {
 		const signingKeyOption = option._skeyFilePaths.map(filePath => `--signing-key-file ${filePath}`).join(DkConst.SPACE);
 
-		await Cmd.RunAsync(`
+		const response = await Cmd.RunAsync(`
 			${this.cliPath} transaction sign ${this.network} \
 				--tx-body-file ${option._txRawBodyFilePath} \
 				${signingKeyOption} \
 				--out-file ${option._txSignedBodyOutFilePath}
 		`);
+
+		if (response.stderr) {
+			throw new Error(`Could not sign tx, error: ${response.stderr}`);
+		}
 
 		return option._txSignedBodyOutFilePath;
 	}
@@ -284,6 +327,7 @@ export class DkCardanoCli {
 	 * Submit a signed transaction.
 	 *
 	 * @param option
+	 *
 	 * @returns Command result.
 	 */
 	async SubmitTransactionAsync(option: Model.SubmitTransactionOption): Promise<RunCommandResult> {
@@ -293,7 +337,7 @@ export class DkCardanoCli {
 	/**
 	 * Query tx id from the tx-body file path.
 	 *
-	 * @param option tx_signed_body_file_path
+	 * @param option tx_raw_body_file_path
 	 * @returns
 	 */
 	async QueryTransactionIdAsync(option: Model.QueryTransactionIdOption): Promise<string | null> {
@@ -306,11 +350,11 @@ export class DkCardanoCli {
 		}
 
 		if (!txOption) {
-			throw new Error("Must provide one of: txFilePath or txBodyFilePath");
+			throw new Error("Must provide path of: txFile or txBodyFile");
 		}
 
 		const response = await Cmd.RunAsync(`${this.cliPath} transaction txid ${txOption}`);
 
-		return response.stdout;
+		return response.stdout == null ? null : response.stdout.trim();
 	}
 }
