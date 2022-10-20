@@ -160,7 +160,7 @@ export class DkCardanoCli {
 	 * @throws Error if the address is invalid (not exist in Cardano).
 	 * @returns
 	 */
-	async EnsureAddressExists(address: string): Promise<void> {
+	async EnsureAddressExistsAsync(address: string): Promise<void> {
 		// By default, `query` command uses --cardano-mode.
 		const response = await Cmd.RunAsync(`${this.cliPath} query utxo ${this.network} --address ${address};`);
 		if (response.stderr) {
