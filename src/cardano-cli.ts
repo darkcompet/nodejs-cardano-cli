@@ -151,6 +151,23 @@ export class DkCardanoCli {
 		return JSON.parse(response.stdout!);
 	}
 
+
+	/**
+	 * Ensure given address is exist. Throws exception if the address is invalid.
+	 *
+	 * @param address Cardano address. For eg,. addr_test1vz2exa3va5pddrw33ldxtsnfpp4p0g92ep9np3fvz37a39saqac6q
+	 *
+	 * @throws Error if the address is invalid (not exist in Cardano).
+	 * @returns
+	 */
+	async EnsureAddressExists(address: string): Promise<void> {
+		// By default, `query` command uses --cardano-mode.
+		const response = await Cmd.RunAsync(`${this.cliPath} query utxo ${this.network} --address ${address};`);
+		if (response.stderr) {
+			throw new Error(`Could not touch address, error: ${response.stderr}`);
+		}
+	}
+
 	/**
 	 * Query utxo (balance) from given wallet.
 	 *
