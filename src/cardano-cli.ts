@@ -222,13 +222,16 @@ export class DkCardanoCli {
 				}
 
 				// Parse asset
-				const [quantity, asset] = segment.trim().split(DkConst.SPACE);
+				const [quantity, asset_id] = segment.trim().split(DkConst.SPACE);
 
 				// It is should not happen, but for safe, we should sum up.
-				if (!asset2quantity[asset]) {
-					asset2quantity[asset] = 0;
+				// TechNote: we use bigint instead of number (int53 in js) since quantity is int64.
+				if (asset2quantity[asset_id]) {
+					asset2quantity[asset_id] += BigInt(quantity);
 				}
-				asset2quantity[asset] += parseInt(quantity);
+				else {
+					asset2quantity[asset_id] = BigInt(quantity);
+				}
 			}
 
 			utxos.push({
