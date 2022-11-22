@@ -13,10 +13,12 @@ export class DkCardanoHelper {
 
 		for (const utxo of utxos) {
 			for (const asset in utxo._asset2quantity) {
-				if (!balance[asset]) {
-					balance[asset] = 0;
+				if (balance[asset]) {
+					balance[asset] += utxo._asset2quantity[asset];
 				}
-				balance[asset] += utxo._asset2quantity[asset];
+				else {
+					balance[asset] = utxo._asset2quantity[asset];
+				}
 			}
 		}
 
