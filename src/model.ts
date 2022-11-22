@@ -13,7 +13,7 @@ export interface ConstructOption {
 	/**
 	 * For eg,. --alonzo-era
 	 */
-	 _era?: string|null;
+	_era?: string | null;
 }
 
 export interface TxIn {
@@ -21,8 +21,9 @@ export interface TxIn {
 	_txIndex: number;
 
 	/**
+	 * Mapping of asset_id and quantity in bigint (NOT js-number).
 	 * For eg,. {
-	 *   "lovelace": 1000000,
+	 *   "lovelace": 90123456789123456789,
 	 *   "mynft1": 3
 	 * }
 	 */
@@ -42,10 +43,10 @@ export interface TxOut {
 	_address: string;
 
 	/**
-	 * Mapping of asset name to its quantity.
+	 * Mapping of asset_id and quantity in bigint (NOT js-number).
 	 * For eg,. {
-	 *   "lovelace": 30000000,
-	 *   "mynft1": 20,
+	 *   "lovelace": 90123456789123456789,
+	 *   "mynft1": 3
 	 * }
 	 */
 	_asset2quantity: any;
@@ -59,9 +60,9 @@ export interface Utxo {
 	_datumHash: string;
 
 	/**
-	 * Mapping for both ADA and non-ADA assets.
+	 * Mapping of asset_id and quantity in bigint (NOT js-number).
 	 * For eg,. {
-	 *   "lovelace": 1000000,
+	 *   "lovelace": 90123456789123456789,
 	 *   "mynft1": 3
 	 * }
 	 */
@@ -93,7 +94,7 @@ export interface MintInfo {
 	 * Normally it is "policy_id.asset_name_in_hex"
 	 */
 	_assetId: string;
-	_assetQuantity: number;
+	_assetQuantity: bigint;
 	_policyScriptFilePath: string;
 
 	_redeemer?: string;
