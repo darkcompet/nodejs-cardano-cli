@@ -125,15 +125,13 @@ export class DkCardanoCli {
 	 * @param protocolOutFilePath Where to write output.
 	 *
 	 * @throws Error if something go wrong.
-	 * @returns Generated protocol parameters file path.
 	 */
-	async GenerateProtocolParametersAsyncOrThrow(protocolOutFilePath: string): Promise<string> {
+	async GenerateProtocolParametersAsyncOrThrow(protocolOutFilePath: string): Promise<void> {
 		// By default, `query` command uses --cardano-mode.
 		const response = await Cmd.RunAsync(`${this.cliPath} query protocol-parameters ${this.network} --out-file ${protocolOutFilePath};`);
 		if (response.stderr) {
 			throw new Error(`Could not generate protocol, error: ${response.stderr}`);
 		}
-		return protocolOutFilePath;
 	}
 
 	/**

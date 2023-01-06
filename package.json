@@ -1,6 +1,6 @@
 {
 	"name": "@darkcompet/nodejs-cardano-cli",
-	"version": "1.4.4",
+	"version": "1.4.5",
 	"description": "This is cardano-cli wrapper for nodejs",
 	"author": "DarkCompet <darkcompet@gmail.com>",
 	"license": "ISC",
