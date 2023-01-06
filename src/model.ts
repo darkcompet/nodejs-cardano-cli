@@ -31,7 +31,7 @@ export interface TxIn {
 
 	_datum?: string;
 	_datumHash?: string;
-	_script?: ScriptDetail;
+	_scriptFilePath?: string;
 	_redeemer?: string;
 	_executionUnits?: number[]; // Only 2 elements
 }
@@ -67,10 +67,6 @@ export interface Utxo {
 	 * }
 	 */
 	_asset2quantity: any;
-}
-
-export interface ScriptDetail {
-	_scriptFilePath: string;
 }
 
 // Do NOT change property names since they are fixed.
@@ -151,7 +147,7 @@ export interface WithdrawalOption {
 export interface CertOption {
 	_cert: any;
 
-	_script?: ScriptDetail;
+	_scriptFilePath?: string;
 	_datum?: string;
 	_redeemer?: string;
 	_executionUnits?: number[]; // Only 2 elements
@@ -162,7 +158,7 @@ export interface MetadataOption {
 }
 
 export interface AuxScriptOption {
-	_script: ScriptDetail;
+	_scriptFilePath: string;
 }
 
 export interface CalculateTransactionMinFeeOption {

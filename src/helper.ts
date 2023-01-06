@@ -10,11 +10,11 @@ export class Helper {
 		for (const option of txIns) {
 			result += ` --tx-in${isCollateral ? "-collateral" : ""} ${option._txHash}#${option._txIndex}`;
 
-			if (option._script) {
-				if (!option._script._scriptFilePath) {
+			if (option._scriptFilePath) {
+				if (!option._scriptFilePath) {
 					throw new Error("Script file path is required");
 				}
-				result += ` --tx-in-script-file ${option._script._scriptFilePath}`;
+				result += ` --tx-in-script-file ${option._scriptFilePath}`;
 			}
 			if (option._datum) {
 				result += ` --tx-in-datum-value '${option._datum}'`;
@@ -135,8 +135,8 @@ export class Helper {
 		for (const option of options) {
 			result += ` --certificate ${option._cert}`;
 
-			if (option._script) {
-				result += ` --certificate-script-file ${option._script._scriptFilePath}`;
+			if (option._scriptFilePath) {
+				result += ` --certificate-script-file ${option._scriptFilePath}`;
 			}
 			if (option._datum) {
 				result += ` --certificate-script-datum-value '${option._datum}'`;
@@ -160,7 +160,7 @@ export class Helper {
 		let result = DkConst.EMPTY_STRING;
 
 		for (const option of options) {
-			result += ` --auxiliary-script-file ${option._script._scriptFilePath}`;
+			result += ` --auxiliary-script-file ${option._scriptFilePath}`;
 		}
 
 		return result.trimStart();
