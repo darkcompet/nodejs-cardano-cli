@@ -11,12 +11,10 @@ export class Helper {
 			result += ` --tx-in${isCollateral ? "-collateral" : ""} ${option._txHash}#${option._txIndex}`;
 
 			if (option._script) {
-				if (!option._script._outFilePath || !option._script._outContent) {
-					throw new Error("Script file path and content are needed");
+				if (!option._script._scriptFilePath) {
+					throw new Error("Script file path is required");
 				}
-				await DkFiles.WriteFileOrThrowAsync(option._script._outFilePath, option._script._outContent);
-				const scriptFilePath = option._script._outFilePath;
-				result += ` --tx-in-script-file ${scriptFilePath}`;
+				result += ` --tx-in-script-file ${option._script._scriptFilePath}`;
 			}
 			if (option._datum) {
 				result += ` --tx-in-datum-value '${option._datum}'`;
@@ -138,8 +136,7 @@ export class Helper {
 			result += ` --certificate ${option._cert}`;
 
 			if (option._script) {
-				await DkFiles.WriteFileOrThrowAsync(option._script._outFilePath, option._script._outContent);
-				result += ` --certificate-script-file ${option._script._outFilePath}`;
+				result += ` --certificate-script-file ${option._script._scriptFilePath}`;
 			}
 			if (option._datum) {
 				result += ` --certificate-script-datum-value '${option._datum}'`;
@@ -156,19 +153,14 @@ export class Helper {
 	}
 
 	static async _BuildMetadataOptionAsync(option: Model.MetadataOption): Promise<string> {
-		await DkFiles.WriteFileOrThrowAsync(option._metadataOutFilePath, option._metadataOutContent);
-
-		const metadataInFilePath = option._metadataOutFilePath;
-
-		return `--metadata-json-file ${metadataInFilePath}`;
+		return `--metadata-json-file ${option._metadataFilePath}`;
 	}
 
 	static async _BuildAuxScriptOptionAsync(options: Model.AuxScriptOption[]) {
 		let result = DkConst.EMPTY_STRING;
 
 		for (const option of options) {
-			await DkFiles.WriteFileOrThrowAsync(option._script._outFilePath, option._script._outContent);
-			result += ` --auxiliary-script-file ${option._script._outFilePath}`;
+			result += ` --auxiliary-script-file ${option._script._scriptFilePath}`;
 		}
 
 		return result.trimStart();

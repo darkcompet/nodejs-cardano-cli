@@ -70,8 +70,7 @@ export interface Utxo {
 }
 
 export interface ScriptDetail {
-	_outFilePath: string;
-	_outContent: string;
+	_scriptFilePath: string;
 }
 
 // Do NOT change property names since they are fixed.
@@ -159,8 +158,7 @@ export interface CertOption {
 }
 
 export interface MetadataOption {
-	_metadataOutFilePath: string;
-	_metadataOutContent: string;
+	_metadataFilePath: string;
 }
 
 export interface AuxScriptOption {
