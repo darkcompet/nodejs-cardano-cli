@@ -19,15 +19,15 @@ export class DkCardanoCli {
 	private readonly network: string;
 
 	/**
-	 * Default is: --alonzo-era
 	 * To unset era, just provide empty string (not null).
+	 * @param era For eg,. `--alonzo-era`, `--babbage-era`, ...
 	 */
 	private readonly era: string;
 
 	constructor(option: Model.ConstructOption) {
 		this.cliPath = option._cliPath;
 		this.network = option._network;
-		this.era = option._era ?? "--alonzo-era";
+		this.era = option._era ?? "";
 	}
 
 	/**
